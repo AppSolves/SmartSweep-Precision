@@ -33,6 +33,7 @@ def sync(
             ".venv",
             ".git",
             "app",
+            "assets",
             "config" if exclude_config else None,
         ]
 
