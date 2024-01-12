@@ -1,9 +1,14 @@
-from src.classes import CleaningRobot, time
+from src.classes import (  # Importing the CleaningRobot class and time module
+    CleaningRobot,
+    time,
+)
 
-robot = CleaningRobot()
+robot = CleaningRobot()  # Creating a new instance of the CleaningRobot class
 
 while True:
-    if robot.startstop_button.is_pressed and not robot.is_cleaning:
-        robot.start_routine()
+    if (
+        robot.startstop_button.is_pressed and not robot.is_cleaning
+    ):  # If the start/stop button is pressed and the robot is not cleaning
+        robot.start_routine()  # Start the cleaning routine
 
-    time.sleep(0.01)
+    time.sleep(0.01)  # Sleep for 0.01 seconds to prevent the CPU from being overloaded
