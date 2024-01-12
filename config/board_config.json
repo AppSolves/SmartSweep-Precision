@@ -1,0 +1,26 @@
+{
+    "magnetometer": {
+        "output_data_rate": "200HZ",
+        "range": "2G",
+        "mode": "continuous",
+        "calibration": {
+            "y": {
+                "offset": 2210.0,
+                "scale": 0.000406174
+            },
+            "x": {
+                "offset": -1832.5,
+                "scale": 0.000414508
+            },
+            "z": {
+                "offset": -1946.0,
+                "scale": 0.000513874
+            }
+        },
+        "oversampling_ratio": "512",
+        "declination": {
+            "degrees": 3,
+            "minutes": 37
+        }
+    }
+}
