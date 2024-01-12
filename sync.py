@@ -26,11 +26,12 @@ def sync(
         this_dir = os.path.dirname(os.path.realpath(__file__))
         arduino_dir = rf"{disk}:"
 
-        exclude_files = ["sync.py"]
+        exclude_files = ["sync.py", "README.md", ".gitignore", "requirements.txt"]
         exclude_dirs = [
             "System Volume Information",
             ".vscode",
             ".venv",
+            ".git",
             "app",
             "config" if not include_config else None,
         ]
