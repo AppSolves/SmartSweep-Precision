@@ -11,21 +11,21 @@ app = typer.Typer()
 def sync(
     disk: Annotated[
         str,
-        typer.Argument(..., help="The drive to sync to (e.g. 'P:')"),
+        typer.Argument(..., help="The drive letter to sync to (e.g. 'P')"),
     ],
-    include_config: Annotated[
+    exclude_config: Annotated[
         Optional[bool],
-        typer.Option(..., "--include-config", "-i", help="Include config files"),
+        typer.Option(..., "--exclude-config", "-ec", help="Exclude config files"),
     ] = False,
 ):
-    if not os.path.exists(disk):
+    this_dir = os.path.dirname(os.path.realpath(__file__))
+    arduino_dir = rf"{disk}:"
+
+    if not os.path.exists(arduino_dir):
         typer.echo(f"Drive {disk} does not exist")
         raise typer.Exit(code=1)
 
     try:
-        this_dir = os.path.dirname(os.path.realpath(__file__))
-        arduino_dir = rf"{disk}:"
-
         exclude_files = ["sync.py", "README.md", ".gitignore", "requirements.txt"]
         exclude_dirs = [
             "System Volume Information",
@@ -33,7 +33,7 @@ def sync(
             ".venv",
             ".git",
             "app",
-            "config" if not include_config else None,
+            "config" if exclude_config else None,
         ]
 
         for root, dirs, files in os.walk(arduino_dir, topdown=False):
@@ -64,7 +64,7 @@ def sync(
 
         typer.echo("Sync complete!")
 
-        if not include_config:
+        if exclude_config:
             typer.echo("Note: config files were not synced")
     except Exception as e:
         typer.echo(f"Error: {e}")
