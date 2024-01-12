@@ -29,7 +29,7 @@ If you have ideas for improvements or new features, feel free to contribute to t
 This project was developed by [AppSolves](https://appsolves.dev). Special thanks to the open-source community for their contributions and support.
 
 ## License
-This cleaning robot project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE) file for more details.
+Cleaning Robot © 2023 by Kaan Gönüldinc is licensed under CC BY-NC-ND 4.0 
 
 ## Conclusion
 
