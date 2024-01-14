@@ -1,3 +1,7 @@
+# Copyright (c) 2024 Kaan Gönüldinc
+# This file is part of Cleaning-Robot.
+# It is subject to the terms and conditions of the CC BY-NC-ND 4.0 license.
+
 import asyncio
 import json
 import math
