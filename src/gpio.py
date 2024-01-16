@@ -9,7 +9,7 @@ from src.config import BoardConfigManager
 
 class Button(Pin):
     def __init__(self, pin: str, pull: int | None = Pin.PULL_UP):
-        self.__board_config_manager__ = BoardConfigManager.instance()
+        self.__board_config_manager__ = BoardConfigManager()
         self.__pull__ = pull
         super().__init__(self.__board_config_manager__.pin_map[pin], Pin.IN, pull)
 

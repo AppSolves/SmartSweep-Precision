@@ -13,7 +13,7 @@ from src.config import BoardConfigManager
 
 def setup_connections():
     router = network.WLAN(network.STA_IF)
-    board_config_manager = BoardConfigManager.instance()
+    board_config_manager = BoardConfigManager()
     if board_config_manager.has("router"):
         router.config(
             ssid=board_config_manager.get("router").get("ssid"),
@@ -31,7 +31,7 @@ def setup_connections():
 
 
 async def setup_bluetooth():
-    board_config_manager = BoardConfigManager.instance()
+    board_config_manager = BoardConfigManager()
     _MICROCONTROLLER_SERVICE_UUID = bluetooth.UUID(0x181B)
     _MICROCONTROLLER_DATA_UUID = bluetooth.UUID(0x2A6F)
     _GENERIC_COMPUTER = const(128)  # type: ignore

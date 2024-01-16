@@ -6,22 +6,16 @@ import json
 import os
 
 
-class Singleton:
-    def __init__(self, decorated):
-        self._decorated = decorated
+def Singleton(cls):
+    __instance__ = None
 
-    def instance(self):
-        try:
-            return self._instance
-        except AttributeError:
-            self._instance = self._decorated()
-            return self._instance
+    def __get_instance__(*args, **kwargs):
+        nonlocal __instance__
+        if __instance__ is None:
+            __instance__ = cls(*args, **kwargs)
+        return __instance__
 
-    def __call__(self):
-        raise TypeError("Singletons must be accessed through `instance()`.")
-
-    def __instancecheck__(self, inst):
-        return isinstance(inst, self._decorated)
+    return __get_instance__
 
 
 @Singleton

@@ -10,7 +10,7 @@ from src.config import BoardConfigManager
 
 class Motor:
     def __init__(self, pin1: str, pin2: str, enable_pin: str, initial_speed: int = 0):
-        self.__board_config_manager__ = BoardConfigManager.instance()
+        self.__board_config_manager__ = BoardConfigManager()
         self.__pin1__ = Pin(self.__board_config_manager__.pin_map[pin1], Pin.OUT)
         self.__pin2__ = Pin(self.__board_config_manager__.pin_map[pin2], Pin.OUT)
 

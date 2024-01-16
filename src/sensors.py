@@ -16,7 +16,7 @@ class UltrasonicSensor:
     def __init__(self, trigger_pin: str, echo_pin: str):
         self.__active__ = True
         self.__distance__ = 0
-        self.__board_config_manager__ = BoardConfigManager.instance()
+        self.__board_config_manager__ = BoardConfigManager()
         self.__trigger_pin__ = Pin(
             self.__board_config_manager__.pin_map[trigger_pin],
             Pin.OUT,
@@ -91,7 +91,7 @@ class Magnetometer:
     ):
         self.__i2c__ = i2c
         self.__address__ = address
-        self.__board_config_manager__ = BoardConfigManager.instance()
+        self.__board_config_manager__ = BoardConfigManager()
 
         if indicator_pin is not None:
             self.__indicator_pin__ = Pin(
