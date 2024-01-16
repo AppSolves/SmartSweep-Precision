@@ -9,6 +9,7 @@ from typing import Annotated, Optional
 import typer
 
 app = typer.Typer()
+self_file = os.path.basename(__file__)
 
 
 @app.command()
@@ -30,7 +31,12 @@ def sync(
         raise typer.Exit(code=1)
 
     try:
-        exclude_files = ["sync.py", "README.md", ".gitignore", "requirements.txt"]
+        exclude_files = [
+            self_file,
+            "README.md",
+            ".gitignore",
+            "requirements.txt",
+        ]
         exclude_dirs = [
             "System Volume Information",
             ".vscode",
