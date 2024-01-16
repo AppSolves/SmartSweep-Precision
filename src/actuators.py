@@ -5,23 +5,23 @@
 from machine import Pin  # type: ignore
 from pyb import Timer  # type: ignore
 
-from config import BoardConfigManager
+from src.config import BoardConfigManager
 
 
 class Motor:
     def __init__(self, pin1: str, pin2: str, enable_pin: str, initial_speed: int = 0):
-        self.__board_config_manager__ = BoardConfigManager()
-        self.__pin1__ = Pin(self.__board_config_manager__.pin_map(pin1), Pin.OUT)
-        self.__pin2__ = Pin(self.__board_config_manager__.pin_map(pin2), Pin.OUT)
+        self.__board_config_manager__ = BoardConfigManager.instance()
+        self.__pin1__ = Pin(self.__board_config_manager__.pin_map[pin1], Pin.OUT)
+        self.__pin2__ = Pin(self.__board_config_manager__.pin_map[pin2], Pin.OUT)
 
-        ena_pin = Pin(self.__board_config_manager__.pin_map(enable_pin), Pin.OUT)
+        ena_pin = Pin(self.__board_config_manager__.pin_map[enable_pin], Pin.OUT)
         timer2 = Timer(
-            self.__board_config_manager__.timer_map([enable_pin, "timer"]),
-            freq=100,
+            self.__board_config_manager__.timer_map[enable_pin]["timer"],
+            freq=1000,
         )
 
         self.__enable_pin__ = timer2.channel(
-            self.__board_config_manager__.timer_map([enable_pin, "channel"]),
+            self.__board_config_manager__.timer_map[enable_pin]["channel"],
             Timer.PWM,
             pin=ena_pin,
         )

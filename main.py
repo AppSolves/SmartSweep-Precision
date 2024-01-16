@@ -2,12 +2,13 @@
 # This file is part of Cleaning-Robot.
 # It is subject to the terms and conditions of the CC BY-NC-ND 4.0 license.
 
-from cleaning_robot import (  # Importing the CleaningRobot class and time module
+from src.cleaning_robot import (  # Importing the CleaningRobot class and time module
     CleaningRobot,
     time,
 )
 
 robot = CleaningRobot()  # Creating a new instance of the CleaningRobot class
+
 
 while True:
     if (

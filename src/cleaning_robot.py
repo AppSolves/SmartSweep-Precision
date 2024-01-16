@@ -7,10 +7,9 @@ import time
 
 from machine import I2C, Pin  # type: ignore
 
-from actuators import Motor
-from config import BoardConfigManager
-from gpio import Button
-from sensors import Magnetometer, UltrasonicSensor
+from src.actuators import Motor
+from src.gpio import Button
+from src.sensors import Magnetometer, UltrasonicSensor
 
 
 class CleaningRobot:
@@ -62,10 +61,6 @@ class CleaningRobot:
     @property
     def magnetometer(self):
         return self.__magnetometer__
-
-    @property
-    def board_config_manager(self):
-        return BoardConfigManager.instance()
 
     @property
     def is_cleaning(self):

@@ -94,8 +94,8 @@ class BoardConfigManager:
             pass
 
     @property
-    def pin_map(self, key: str | None = None):
-        __pin_map__ = {
+    def pin_map(self):
+        return {
             "D0": "PB7",
             "D1": "PA9",
             "D2": "PA3",
@@ -184,14 +184,9 @@ class BoardConfigManager:
             "A13": "PA5",
         }
 
-        if key is None:
-            return __pin_map__
-
-        return __pin_map__.get(key, None)
-
     @property
-    def timer_map(self, key: list[str] | None = None):
-        __timer_map__ = {
+    def timer_map(self):
+        return {
             "D0": {
                 "timer": 17,
                 "channel": 1,
@@ -249,13 +244,3 @@ class BoardConfigManager:
                 "channel": None,
             },
         }
-
-        if key is None:
-            return __timer_map__
-
-        if len(key) == 2:
-            return __timer_map__.get(key[0], {}).get(key[1], None)
-        elif len(key) == 1:
-            return __timer_map__.get(key[0], None)
-        else:
-            return None

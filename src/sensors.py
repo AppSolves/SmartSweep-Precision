@@ -7,7 +7,7 @@ import time
 
 from machine import I2C, Pin, time_pulse_us  # type: ignore
 
-from config import BoardConfigManager
+from src.config import BoardConfigManager
 
 
 class UltrasonicSensor:
@@ -18,12 +18,12 @@ class UltrasonicSensor:
         self.__distance__ = 0
         self.__board_config_manager__ = BoardConfigManager.instance()
         self.__trigger_pin__ = Pin(
-            self.__board_config_manager__.pin_map(trigger_pin),
+            self.__board_config_manager__.pin_map[trigger_pin],
             Pin.OUT,
             pull=None,
         )
         self.__echo_pin__ = Pin(
-            self.__board_config_manager__.pin_map(echo_pin),
+            self.__board_config_manager__.pin_map[echo_pin],
             Pin.IN,
             pull=None,
         )
@@ -95,7 +95,7 @@ class Magnetometer:
 
         if indicator_pin is not None:
             self.__indicator_pin__ = Pin(
-                self.__board_config_manager__.pin_map(indicator_pin),
+                self.__board_config_manager__.pin_map[indicator_pin],
                 Pin.OUT,
             )
             self.indicator_pin.off()
