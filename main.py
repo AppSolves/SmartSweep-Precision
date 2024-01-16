@@ -2,7 +2,7 @@
 # This file is part of Cleaning-Robot.
 # It is subject to the terms and conditions of the CC BY-NC-ND 4.0 license.
 
-from src.classes import (  # Importing the CleaningRobot class and time module
+from cleaning_robot import (  # Importing the CleaningRobot class and time module
     CleaningRobot,
     time,
 )

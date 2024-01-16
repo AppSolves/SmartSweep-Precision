@@ -8,7 +8,7 @@ import aioble  # type:ignore
 import bluetooth  # type:ignore
 import network  # type:ignore
 
-from src.classes import BoardConfigManager
+from config import BoardConfigManager
 
 
 def setup_connections():
