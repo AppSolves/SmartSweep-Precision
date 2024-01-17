@@ -26,12 +26,14 @@ class Motor:
             pin=ena_pin,
         )
         self.stop()
-        self.set_speed(initial_speed)
+        self.speed = initial_speed
 
-    def get_speed(self):
+    @property
+    def speed(self):
         return self.__speed__
 
-    def set_speed(self, speed: int):
+    @speed.setter
+    def speed(self, speed: int):
         self.__speed__ = 100 if speed > 100 else (0 if speed < 0 else speed)
         self.__enable_pin__.pulse_width_percent(self.__speed__)
 
@@ -44,6 +46,6 @@ class Motor:
         self.__pin2__.off()
 
     def stop(self):
-        self.set_speed(0)
+        self.speed = 0
         self.__pin1__.off()
         self.__pin2__.off()

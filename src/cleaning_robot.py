@@ -80,8 +80,8 @@ class CleaningRobot:
 
     def get_speed(self):
         return {
-            "left": self.__motor_left__.get_speed(),
-            "right": self.__motor_right__.get_speed(),
+            "left": self.__motor_left__.speed,
+            "right": self.__motor_right__.speed,
         }
 
     def __set_speed__(self, speed: dict | int):
@@ -90,8 +90,8 @@ class CleaningRobot:
                 "left": speed,
                 "right": speed,
             }
-        self.__motor_left__.set_speed(speed["left"])
-        self.__motor_right__.set_speed(speed["right"])
+        self.__motor_left__.speed = speed["left"]
+        self.__motor_right__.speed = speed["right"]
 
     def __forward__(self):
         self.__motor_left__.forward()
