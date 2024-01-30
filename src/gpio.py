@@ -15,10 +15,9 @@ class Button(Pin):
 
     @property
     def is_pressed(self) -> bool:
-        if self.__pull__ is None:
+        if self.__pull__ is None or self.__pull__ == Pin.PULL_DOWN:
             return self.value() == 1
         elif self.__pull__ == Pin.PULL_UP:
             return self.value() == 0
-        elif self.__pull__ == Pin.PULL_DOWN:
-            return self.value() == 1
-        return False
+        else:
+            return False
