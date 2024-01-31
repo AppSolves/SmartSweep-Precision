@@ -1,7 +1,5 @@
 <div align="center">
 
-<script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script> 
-
 <dotlottie-player src="https://lottie.host/bb360b33-0036-4d27-833e-455f4cc19239/PKsEWMJjW6.json" background="transparent" speed="1" style="width: 350px; height: 350px;" loop autoplay></dotlottie-player>
 
 # `SmartSweep Precision`
