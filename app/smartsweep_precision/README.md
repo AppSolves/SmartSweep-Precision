@@ -2,7 +2,7 @@
 
 ## Overview
 
-Welcome to [SmartSweep Precision](https://github.com/AppSolves/Cleaning-Robot), an innovative Flutter app designed to control your Arduino Giga-based cleaning robot with utmost precision. This README.md file provides essential information for users, developers, and contributors.
+Welcome to [SmartSweep Precision](https://github.com/AppSolves/SmartSweep-Precision), an innovative Flutter app designed to control your Arduino Giga-based cleaning robot with utmost precision. This README.md file provides essential information for users, developers, and contributors.
 
 ## Features
 
@@ -18,7 +18,7 @@ Welcome to [SmartSweep Precision](https://github.com/AppSolves/Cleaning-Robot), 
 
 * **Hardware Setup**: Ensure that your cleaning robot is built using Arduino Giga R1 WiFi and is compatible with the SmartSweep Precision app.
 
-* **Installation**: Set up your SmartSweep device according to the [docs](https://github.com/AppSolves/Cleaning-Robot#cleaning-robot-project) and install the SmartSweep Precision app on your mobile device.
+* **Installation**: Set up your SmartSweep device according to the [docs](https://github.com/AppSolves/SmartSweep-Precision#installation) and install the SmartSweep Precision app on your mobile device.
 
 * **Connection**: Establish a secure connection between your cleaning robot and the app by following the provided instructions.
 
@@ -42,7 +42,7 @@ Welcome to [SmartSweep Precision](https://github.com/AppSolves/Cleaning-Robot), 
 
 ## Support and Feedback
 
-For any issues, feedback, or feature requests, please open an [issue](https://github.com/AppSolves/Cleaning-Robot/issues) on the SmartSweep Precision GitHub repository.
+For any issues, feedback, or feature requests, please open an [issue](https://github.com/AppSolves/SmartSweep-Precision/issues) on the SmartSweep Precision GitHub repository.
 
 ## License
 
