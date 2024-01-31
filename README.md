@@ -1,6 +1,6 @@
 <div align="center">
 
-<dotlottie-player src="https://lottie.host/bb360b33-0036-4d27-833e-455f4cc19239/PKsEWMJjW6.json" background="transparent" speed="1" style="width: 350px; height: 350px;" loop autoplay></dotlottie-player>
+<img src="./assets/readme-anim.gif" alt="readmeanim" width="425" height="425"/>
 
 # `SmartSweep Precision`
 
