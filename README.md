@@ -12,7 +12,7 @@
 
 <br />
 
-> 👋This is a very early release and _lots_ more documentation and functionality is currently being added.
+> 👋 This is a very early release and _lots_ more documentation and functionality is currently being added.
 
 # SmartSweep Precision
 
