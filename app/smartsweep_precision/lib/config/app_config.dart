@@ -20,16 +20,8 @@ class SizeConfig {
 }
 
 class AppConfig {
-  static String get appStoreListing {
-    return "https://play.google.com/store/apps/details?id=$packageName";
-  }
-
   static String get developerName {
     return "AppSolves";
-  }
-
-  static String get developerSite {
-    return "https://play.google.com/store/apps/dev?id=6007461154397933888";
   }
 
   static String get legalese {

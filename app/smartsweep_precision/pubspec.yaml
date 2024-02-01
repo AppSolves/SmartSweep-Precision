@@ -9,9 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_blue_plus: ^1.31.13
   flutter_native_splash: ^2.3.9
   google_fonts: ^6.1.0
   package_info_plus: ^5.0.1
+  permission_handler: ^11.2.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -30,4 +32,19 @@ flutter:
   fonts:
     - family: CustomIcons
       fonts:
-        - asset: assets/fonts/menu_icon.ttf
+        - asset: assets/fonts/CustomIcons.ttf
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/images/logo.png"
+  web:
+    generate: true
+    background_color: "#ffffff"
+    theme_color: "#ffffff"
+  windows:
+    generate: true
+    icon_size: 48
+  macos:
+    generate: true

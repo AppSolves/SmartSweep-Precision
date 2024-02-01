@@ -9,7 +9,6 @@ from src.cleaning_robot import (  # Importing the CleaningRobot class and time m
 
 robot = CleaningRobot()  # Creating a new instance of the CleaningRobot class
 
-
 while True:
     if (
         robot.startstop_button.is_pressed and not robot.is_cleaning
