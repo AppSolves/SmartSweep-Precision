@@ -6,7 +6,7 @@
 
 <h4><code>SmartSweep Precision</code> is a smart cleaning robot that can autonomously navigate and clean designated areas.</h4>
 
-[Introduction](#introduction) • [Features](#features) • [Installation](#installation) • [Usage](#usage) • [Customization](#customization) • [Contribution](#contribution) • [Credits](#credits) • [License](#license)
+[Introduction](#introduction-) • [Features](#features-) • [Installation](#installation-) • [Usage](#usage-) • [Customization](#customization-) • [Contribution](#contribution-) • [Credits](#credits-) • [License](#license-)
 
 </div>
 
