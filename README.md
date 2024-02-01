@@ -24,7 +24,7 @@ Welcome to the SmartSweep Precision Project! This project aims to create a versa
 - **Advanced dirt removal**: The new innovative brush can remove persistent dirt particles, ensuring thorough cleaning.
 - **Obstacle Avoidance**: The robot intelligently avoids obstacles in its path, ensuring a safe cleaning process.
 
-## Installation 🛠️
+## Installation ⚙️
 1. **MicroPython:** Install MicroPython on your Arduino board using [this guide](https://docs.arduino.cc/tutorials/giga-r1-wifi/giga-micropython).
 2. **Fork:** Clone the repository to your local machine using `git clone`
 3. **Install:** Install the required libraries using `pip install -r requirements.txt`
