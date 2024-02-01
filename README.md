@@ -42,7 +42,7 @@ Feel free to customize the cleaning robot according to your preferences. Adjust 
 If you have ideas for improvements or new features, feel free to contribute to the project. Fork the repository, make your changes, and submit a pull request.
 
 ## Credits 🙏
-This project was developed by [AppSolves](https://github.com/AppSolves). Special thanks to the open-source community for their contributions and support.
+This project was developed and is maintained by [AppSolves](https://github.com/AppSolves). Special thanks to the open-source community for their contributions and support.
 
 **Website**: [https://appsolves.dev](https://appsolves.dev)
 
