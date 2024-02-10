@@ -1,13 +1,19 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smartsweep_precision/config/extensions.dart';
+import 'package:smartsweep_precision/config/settings_manager.dart';
+import 'package:smartsweep_precision/main.dart';
+import 'package:smartsweep_precision/pages/on_boarding_screen.dart';
 
 class Themes {
   static void initialize() {
     PlatformDispatcher.instance.onPlatformBrightnessChanged =
-        _setSystemUIOverlayStyle;
+        setSystemUIOverlayStyle;
   }
 
   static const darkModeColor = Color(0xFF121212);
@@ -342,20 +348,24 @@ class Themes {
     return Color(int.parse(code.substring(1, 7), radix: 16) + 0xFF000000);
   }
 
-  static Text iconToText(
+  static Transform iconToText(
     BuildContext context,
     IconData icon, {
     Color? color,
     double? size,
+    Offset offset = const Offset(0, 0),
   }) {
-    return Text(
-      String.fromCharCode(icon.codePoint),
-      style: TextStyle(
-        color: color ?? Theme.of(context).textTheme.bodyLarge?.color,
-        inherit: false,
-        fontSize: size ?? 25,
-        fontWeight: FontWeight.w600,
-        fontFamily: icon.fontFamily,
+    return Transform.translate(
+      offset: offset,
+      child: Text(
+        String.fromCharCode(icon.codePoint),
+        style: TextStyle(
+          color: color ?? Theme.of(context).textTheme.bodyLarge?.color,
+          inherit: false,
+          fontSize: size ?? 25,
+          fontWeight: FontWeight.w600,
+          fontFamily: icon.fontFamily,
+        ),
       ),
     );
   }
@@ -430,7 +440,7 @@ class Themes {
       style: style ??
           ButtonStyle(
             backgroundColor: MaterialStateProperty.all<Color>(
-              Themes.primaryColor,
+              primaryColor,
             ),
             shape: shape ??
                 MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -476,16 +486,157 @@ class Themes {
     return PlatformDispatcher.instance.platformBrightness;
   }
 
-  static void _setSystemUIOverlayStyle() {
+  static void changeThemeMode(ThemeMode themeMode) async {
+    MainAppState.themeModeNotifier.value = themeMode;
+    final File file = await SettingsManager.settingsFile;
+    final bool showOnBoardingScreenNextTimeAgain =
+        await OnBoardingScreenManager.showOnBoardingScreen;
+    final String data = jsonEncode(
+      {
+        "showOnBoardingScreenNextTimeAgain": showOnBoardingScreenNextTimeAgain,
+        "themeMode": (themeMode == ThemeMode.dark
+            ? "dark"
+            : themeMode == ThemeMode.light
+                ? "light"
+                : "system"),
+      },
+    );
+    file.writeAsStringSync(data);
+
+    setSystemUIOverlayStyle(themeMode: themeMode);
+  }
+
+  static void setSystemUIOverlayStyle({ThemeMode? themeMode}) {
+    final ThemeMode appThemeMode =
+        themeMode ?? MainAppState.themeModeNotifier.value;
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: platformBrightness == Brightness.dark
-            ? Themes.darkModeColor
-            : Colors.white,
-        systemNavigationBarIconBrightness: platformBrightness == Brightness.dark
+        systemNavigationBarColor: appThemeMode == ThemeMode.dark
+            ? darkModeColor
+            : appThemeMode == ThemeMode.light
+                ? Colors.white
+                : platformBrightness == Brightness.dark
+                    ? darkModeColor
+                    : Colors.white,
+        systemNavigationBarIconBrightness: appThemeMode == ThemeMode.dark
             ? Brightness.light
-            : Brightness.dark,
+            : appThemeMode == ThemeMode.light
+                ? Brightness.dark
+                : platformBrightness == Brightness.dark
+                    ? Brightness.light
+                    : Brightness.dark,
+      ),
+    );
+  }
+
+  static Future<ThemeMode> get themeMode async {
+    final File file = await SettingsManager.settingsFile;
+    final String contents = file.readAsStringSync();
+    try {
+      final dynamic jsonResponse = jsonDecode(contents);
+
+      if (jsonResponse["themeMode"] == "dark") {
+        return ThemeMode.dark;
+      }
+      if (jsonResponse["themeMode"] == "light") {
+        return ThemeMode.light;
+      }
+      return ThemeMode.system;
+    } catch (_) {
+      return ThemeMode.system;
+    }
+  }
+
+  static void showThemeSelectionDialog(BuildContext context) {
+    final ThemeMode themeMode = MainAppState.themeModeNotifier.value;
+    if (!context.mounted) return;
+
+    showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Select theme'),
+        content: null,
+        actions: <Widget>[
+          SimpleDialogOption(
+            onPressed: () {
+              changeThemeMode(ThemeMode.light);
+              Navigator.pop(context);
+            },
+            child: Row(
+              children: [
+                if (themeMode == ThemeMode.light)
+                  iconToText(
+                    context,
+                    Icons.check,
+                    color: Colors.green,
+                    offset: const Offset(-10, 0),
+                  ),
+                const Spacer(),
+                const Text(
+                  "Light",
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              changeThemeMode(ThemeMode.dark);
+              Navigator.pop(context);
+            },
+            child: Row(
+              children: [
+                if (themeMode == ThemeMode.dark)
+                  iconToText(
+                    context,
+                    Icons.check,
+                    color: Colors.green,
+                    offset: const Offset(-10, 0),
+                  ),
+                const Spacer(),
+                const Text(
+                  "Dark",
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () {
+              changeThemeMode(ThemeMode.system);
+              Navigator.pop(context);
+            },
+            child: Row(
+              children: [
+                if (themeMode == ThemeMode.system)
+                  iconToText(
+                    context,
+                    Icons.check,
+                    color: Colors.green,
+                    offset: const Offset(-10, 0),
+                  ),
+                const Spacer(),
+                const Text(
+                  "System",
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          textButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text(
+              'Cancel',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            alignment: Alignment.bottomRight,
+            padding: const EdgeInsets.only(top: 30),
+          ),
+        ],
       ),
     );
   }

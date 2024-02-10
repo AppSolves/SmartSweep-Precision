@@ -1,14 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:smartsweep_precision/config/connection.dart';
+import 'package:smartsweep_precision/widgets/back_icon.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class ControlPage extends StatefulWidget {
-  const ControlPage({super.key});
+  const ControlPage({
+    super.key,
+    required this.device,
+  });
+
+  final BluetoothDevice device;
 
   @override
   State<ControlPage> createState() => _ControlPageState();
 }
 
 class _ControlPageState extends State<ControlPage> {
+  @override
+  void initState() {
+    toggleWakelock(true);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    toggleWakelock(false);
+    super.dispose();
+  }
+
+  void toggleWakelock(bool enable) async {
+    await WakelockPlus.toggle(enable: enable);
+  }
+
   void showDisconnectionConfirmationDialog(
     BuildContext context,
     String deviceName,
@@ -48,25 +72,27 @@ class _ControlPageState extends State<ControlPage> {
       onPopInvoked: (didPop) {
         if (didPop) return;
 
-        final String deviceName =
-            ConnectionManager.connectedDevices.first.platformName;
-
-        showDisconnectionConfirmationDialog(context, deviceName);
+        showDisconnectionConfirmationDialog(
+            context, widget.device.platformName);
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Control Page'),
+          title: Text(
+            widget.device.platformName,
+          ),
           centerTitle: true,
-          leading: BackButton(
-            style: ButtonStyle(
-              iconSize: MaterialStateProperty.all(30),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 15),
+            child: IconButton(
+              onPressed: () {
+                showDisconnectionConfirmationDialog(
+                  context,
+                  widget.device.platformName,
+                );
+              },
+              tooltip: 'Back',
+              icon: const BackIcon(),
             ),
-            onPressed: () {
-              final String deviceName =
-                  ConnectionManager.connectedDevices.first.platformName;
-
-              showDisconnectionConfirmationDialog(context, deviceName);
-            },
           ),
         ),
         body: const Center(

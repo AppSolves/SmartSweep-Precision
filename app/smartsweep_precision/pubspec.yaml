@@ -11,9 +11,13 @@ dependencies:
     sdk: flutter
   flutter_blue_plus: ^1.31.13
   flutter_native_splash: ^2.3.9
+  font_awesome_flutter: ^10.7.0
   google_fonts: ^6.1.0
+  lottie: ^3.0.0
   package_info_plus: ^5.0.1
+  path_provider: ^2.1.2
   permission_handler: ^11.2.0
+  wakelock_plus: ^1.1.4
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -38,7 +42,7 @@ flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   remove_alpha_ios: true
-  image_path: "assets/images/logo.png"
+  image_path: "assets/images/logo_icon.png"
   web:
     generate: true
     background_color: "#ffffff"
@@ -48,3 +52,10 @@ flutter_launcher_icons:
     icon_size: 48
   macos:
     generate: true
+
+flutter_native_splash:
+  color: "#ffffff"
+  color_dark: "#121212"
+  android_12:
+    color: "#ffffff"
+    color_dark: "#121212"

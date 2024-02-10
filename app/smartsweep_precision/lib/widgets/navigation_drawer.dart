@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smartsweep_precision/config/app_config.dart';
 import 'package:smartsweep_precision/config/custom_icons.dart';
 import 'package:smartsweep_precision/config/extensions.dart';
 import 'package:smartsweep_precision/config/themes.dart';
+import 'package:smartsweep_precision/pages/on_boarding_screen.dart';
+import 'package:smartsweep_precision/pages/settings_page.dart';
 
 class NavigationDrawerWidget extends StatefulWidget {
   const NavigationDrawerWidget({
@@ -34,14 +37,37 @@ class _NavigationDrawerState extends State<NavigationDrawerWidget> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            trailing: Transform.translate(
+              offset: const Offset(20, 0),
+              child: IconButton(
+                tooltip: "Close",
+                icon: Icon(
+                  Icons.close_rounded,
+                  color: Theme.of(context).iconTheme.color,
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ),
           ),
           const Divider(),
           const SizedBox(height: 10),
           buildMenuItem(
             heading: "Settings",
-            icon: Icons.settings_rounded,
+            icon: const Icon(
+              Icons.settings_outlined,
+              size: 25,
+            ),
             text: 'Configure the app',
             onClicked: () => selectedItem(context, 0),
+          ),
+          const SizedBox(height: 10),
+          buildMenuItem(
+            heading: "Onboarding",
+            icon: const Icon(FontAwesomeIcons.user),
+            text: 'Show onboarding screen',
+            onClicked: () => selectedItem(context, 1),
           ),
           const SizedBox(height: 10),
           const Divider(),
@@ -49,8 +75,11 @@ class _NavigationDrawerState extends State<NavigationDrawerWidget> {
           buildMenuItem(
             heading: "About",
             text: AppConfig.appName,
-            icon: Icons.info_rounded,
-            onClicked: () => selectedItem(context, 1),
+            icon: const Icon(
+              Icons.info_outline_rounded,
+              size: 25,
+            ),
+            onClicked: () => selectedItem(context, 2),
           ),
           const SizedBox(height: 30),
         ],
@@ -60,7 +89,7 @@ class _NavigationDrawerState extends State<NavigationDrawerWidget> {
 
   ListTile buildMenuItem({
     required String heading,
-    IconData? icon,
+    Icon? icon,
     Widget? leading,
     Widget? trailing,
     String? text,
@@ -74,15 +103,11 @@ class _NavigationDrawerState extends State<NavigationDrawerWidget> {
         ),
       ),
       trailing: trailing,
-      leading: icon != null
-          ? Icon(
-              icon,
-              color: Theme.of(context).iconTheme.color,
-            )
-          : Transform.translate(
-              offset: const Offset(-7.5, 0),
-              child: leading,
-            ),
+      leading: icon ??
+          Transform.translate(
+            offset: const Offset(-7.5, 0),
+            child: leading,
+          ),
       title: Text(
         isAccountItem ? heading.correctEllipsis() : heading,
         overflow: TextOverflow.ellipsis,
@@ -114,13 +139,25 @@ class _NavigationDrawerState extends State<NavigationDrawerWidget> {
   void selectedItem(
     BuildContext context,
     int index,
-  ) async {
+  ) {
     Navigator.of(context).pop();
 
     switch (index) {
       case 0:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => const SettingsPage(),
+          ),
+        );
         break;
       case 1:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => const OnBoardingScreen(),
+          ),
+        );
+        break;
+      case 2:
         showCustomAboutDialog();
         break;
     }
@@ -204,16 +241,16 @@ class CustomInfoDialog extends StatelessWidget {
           ],
         ),
         actions: <Widget>[
-          TextButton(
-            child: const Text(
-              "Close",
-              style: TextStyle(
-                color: Themes.primaryColor,
-              ),
-            ),
+          Themes.textButton(
             onPressed: () {
               Navigator.pop(context);
             },
+            child: Text(
+              'Close',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            alignment: Alignment.bottomRight,
+            padding: const EdgeInsets.only(top: 30),
           ),
         ],
         scrollable: true,

@@ -28,7 +28,7 @@ class ConnectionManager {
     return FlutterBluePlus.onScanResults;
   }
 
-  static void startScan() async {
+  static void startScan({bool debug = false}) async {
     if (!(await permissionGranted) || isConnected) return;
 
     if (Platform.isAndroid &&
@@ -39,7 +39,7 @@ class ConnectionManager {
     disconnectAll();
 
     await FlutterBluePlus.startScan(
-      withServices: [_serviceUUID],
+      withServices: debug ? [] : [_serviceUUID],
       timeout: const Duration(seconds: 10),
     );
   }
@@ -98,7 +98,7 @@ class ConnectionManager {
     return await Permission.bluetoothConnect.isGranted;
   }
 
-  static Future<void> initialize() async {
+  static void initialize() async {
     while (![PermissionStatus.granted, PermissionStatus.permanentlyDenied]
         .contains(await Permission.bluetoothConnect.status)) {
       await Permission.bluetoothConnect.request();

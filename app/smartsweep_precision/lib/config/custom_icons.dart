@@ -13,7 +13,7 @@ class CustomIcons {
   static Image appIcon({Size? size, Color? color}) {
     size ??= const Size(30, 30);
     return Image.asset(
-      'assets/images/logo.png',
+      'assets/images/logo_icon.png',
       width: size.width,
       height: size.height,
       color: color,
