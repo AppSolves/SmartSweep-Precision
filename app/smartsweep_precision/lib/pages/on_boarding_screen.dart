@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:lottie/lottie.dart';
+import 'package:smartsweep_precision/config/app_config.dart';
+import 'package:smartsweep_precision/config/connection.dart';
 import 'package:smartsweep_precision/config/settings_manager.dart';
 import 'package:smartsweep_precision/config/themes.dart';
 import 'package:smartsweep_precision/homepage.dart';
@@ -21,7 +23,7 @@ class OnBoardingScreen extends StatefulWidget {
 }
 
 class _OnBoardingScreenState extends State<OnBoardingScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   final PageController _pageController = PageController(
     initialPage: 0,
   );
@@ -78,13 +80,25 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed) {
+      if (!await ConnectionManager.permissionGranted && mounted) {
+        ConnectionManager.showPermissionDialog(context);
+      }
+    }
+    super.didChangeAppLifecycleState(state);
+  }
+
+  @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     FlutterNativeSplash.remove();
     super.initState();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     super.dispose();
   }
@@ -121,11 +135,12 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
     );
   }
 
-  Row buildSkipButton() {
-    return Row(
-      children: [
-        const Spacer(),
-        GestureDetector(
+  Padding buildSkipButton() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 15),
+      child: Align(
+        alignment: Alignment.topRight,
+        child: GestureDetector(
           onTap: () {
             _pageController.animateToPage(
               getLastPageIndex,
@@ -140,7 +155,7 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -296,10 +311,9 @@ class _OnBoardingButton extends StatelessWidget {
               ? isLastPage
                   ? Text(
                       "Get Started",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(fontSize: 13, fontWeight: FontWeight.w800),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontSize: 13 * (SizeConfig.defaultSize / 10.5),
+                          fontWeight: FontWeight.w800),
                     )
                   : BackIcon(
                       isReverse: isForwardButton,

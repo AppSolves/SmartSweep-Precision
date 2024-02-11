@@ -24,17 +24,18 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+class _HomePageState extends State<HomePage> {
   List<ScanResult> _scannedDevices = [];
   bool _isSupported = false;
   bool _isScanning = false;
-  bool _connecting = false;
+  Map<String, dynamic> _connecting = {};
+  bool _bluetoothActivated = ConnectionManager.isBluetoothEnabled;
   StreamSubscription<List<ScanResult>>? _scanSubscription;
   StreamSubscription<bool>? _isScanningSubscription;
+  StreamSubscription<bool>? _bluetoothStateSubscription;
 
   @override
   void initState() {
-    WidgetsBinding.instance.addObserver(this);
     _configureConnection();
 
     if (!widget.poppedOnBoardingScreen) {
@@ -58,25 +59,23 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           _isScanning = isScanning;
         });
       });
+      _bluetoothStateSubscription =
+          ConnectionManager.onBluetoothStateChanged.listen(
+        (bool isBluetoothEnabled) {
+          setState(() {
+            _bluetoothActivated = isBluetoothEnabled;
+          });
+        },
+      );
     }
     setState(() {});
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.resumed) {
-      if (!await ConnectionManager.permissionGranted && mounted) {
-        ConnectionManager.showPermissionDialog(context);
-      }
-    }
-    super.didChangeAppLifecycleState(state);
   }
 
   @override
   void dispose() {
     _scanSubscription?.cancel();
     _isScanningSubscription?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
+    _bluetoothStateSubscription?.cancel();
     super.dispose();
   }
 
@@ -115,7 +114,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       body: Center(
         child: Stack(
           children: [
-            if (_isSupported)
+            if (_isSupported && _bluetoothActivated)
               Padding(
                 padding: const EdgeInsets.only(right: 15, top: 10, bottom: 15),
                 child: Align(
@@ -161,122 +160,139 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-            _isSupported
+            _isSupported && _bluetoothActivated
                 ? _scannedDevices.isNotEmpty
-                    ? ListView.builder(
-                        itemCount: _scannedDevices.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
-                            child: ListTile(
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(25),
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 80),
+                        child: ListView.builder(
+                          itemCount: _scannedDevices.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12.5),
+                              child: ListTile(
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(25),
+                                  ),
                                 ),
-                              ),
-                              onTap: () async {
-                                final bool connected =
-                                    await ConnectionManager.connect(
-                                  _scannedDevices[index - 1].device,
-                                  onEstablishingConnection: () {
-                                    setState(() {
-                                      _connecting = true;
-                                    });
-                                  },
-                                );
-
-                                if (connected && mounted) {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => ControlPage(
-                                        device:
-                                            _scannedDevices[index - 1].device,
-                                      ),
-                                    ),
+                                onTap: () async {
+                                  final bool connected =
+                                      await ConnectionManager.connect(
+                                    _scannedDevices[index].device,
+                                    onEstablishingConnection: () {
+                                      setState(() {
+                                        _connecting = {
+                                          "device":
+                                              _scannedDevices[index].device,
+                                          "status": true,
+                                        };
+                                      });
+                                    },
                                   );
-                                }
 
-                                setState(() {
-                                  _connecting = false;
-                                });
-                              },
-                              title: Text(
-                                _scannedDevices[index - 1].device.platformName,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 22.5,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              subtitle: Text(
-                                _scannedDevices[index - 1].device.remoteId.str,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 17.5,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                              trailing: _connecting
-                                  ? SizedBox(
-                                      width: 50,
-                                      height: 50,
-                                      child: Transform.translate(
-                                        offset: const Offset(0, -15),
-                                        child: JumpingDotsProgressIndicator(
-                                          color:
-                                              Theme.of(context).iconTheme.color,
-                                          fontSize: 35,
+                                  if (connected && mounted) {
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) => ControlPage(
+                                          device: _scannedDevices[index].device,
                                         ),
                                       ),
-                                    )
-                                  : const Icon(
-                                      Icons.arrow_forward_ios_rounded,
-                                      size: 25,
-                                    ),
-                            ),
-                          );
-                        },
-                      )
-                    : Align(
-                        alignment: Alignment.center,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(
-                                left: SizeConfig.screenWidth * 0.1,
-                                right: SizeConfig.screenWidth * 0.1,
-                                bottom: 25,
-                              ),
-                              child: Text(
-                                "Connect to your SmartSweep device by tapping the scan button.",
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[600],
+                                    );
+                                  }
+
+                                  setState(() {
+                                    _connecting = {};
+                                  });
+                                },
+                                title: Text(
+                                  _scannedDevices[index].device.platformName,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 22.5,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
+                                subtitle: Text(
+                                  _scannedDevices[index].device.remoteId.str,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 17.5,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                trailing: _connecting.isNotEmpty &&
+                                        _connecting["device"] ==
+                                            _scannedDevices[index].device
+                                    ? SizedBox(
+                                        width: 50,
+                                        height: 50,
+                                        child: Transform.translate(
+                                          offset: const Offset(0, -15),
+                                          child: JumpingDotsProgressIndicator(
+                                            color: Theme.of(context)
+                                                .iconTheme
+                                                .color,
+                                            fontSize: 35,
+                                          ),
+                                        ),
+                                      )
+                                    : Transform.translate(
+                                        offset: const Offset(10, 0),
+                                        child: const Icon(
+                                          Icons.arrow_forward_ios_rounded,
+                                          size: 25,
+                                        ),
+                                      ),
                               ),
-                            ),
-                            Icon(
-                              Icons.bluetooth_rounded,
-                              size: 50,
-                              color: Colors.grey[600],
-                            )
-                          ],
+                            );
+                          },
                         ),
                       )
+                    : !_isScanning
+                        ? Align(
+                            alignment: Alignment.center,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 25,
+                                    right: 25,
+                                    bottom: 25,
+                                  ),
+                                  child: Text(
+                                    "Connect to your SmartSweep device by tapping the scan button.",
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.bluetooth_rounded,
+                                  size: 50,
+                                  color: Colors.grey[600],
+                                )
+                              ],
+                            ),
+                          )
+                        : Container()
                 : Align(
                     alignment: Alignment.center,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(
-                          padding: EdgeInsets.only(
-                            left: SizeConfig.screenWidth * 0.1,
-                            right: SizeConfig.screenWidth * 0.1,
+                          padding: const EdgeInsets.only(
+                            left: 25,
+                            right: 25,
                             bottom: 25,
                           ),
                           child: Text(
-                            "Bluetooth is not supported on this device.",
+                            !_isSupported
+                                ? "Bluetooth is not supported on this device."
+                                : "Bluetooth is disabled.\nPlease enable it to use the app.",
                             textAlign: TextAlign.center,
                             style: GoogleFonts.poppins(
                               fontSize: 20,
@@ -289,7 +305,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           Icons.bluetooth_disabled_rounded,
                           size: 50,
                           color: Colors.grey[600],
-                        )
+                        ),
                       ],
                     ),
                   ),

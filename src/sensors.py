@@ -303,7 +303,7 @@ class Magnetometer:
             heading -= 360
         return heading
 
-    def read(self):
+    def read(self) -> dict[str, float | int]:
         data = self.__read_Reg__(0x00, 6)
 
         v_raw = [

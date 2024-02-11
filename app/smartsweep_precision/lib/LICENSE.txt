@@ -1,0 +1,3 @@
+Copyright (c) 2024 Kaan Gönüldinc
+All files in this directory and in subdirectories are part of SmartSweep Precision.
+They are subject to the terms and conditions of the CC BY-NC-ND 4.0 license.

@@ -36,12 +36,14 @@ def sync(
             "README.md",
             ".gitignore",
             "requirements.txt",
+            "ble_secrets.json" if exclude_config else None,
         ]
         exclude_dirs = [
             "System Volume Information",
             ".vscode",
             ".venv",
             ".git",
+            "__pycache__",
             "app",
             "assets",
             "config" if exclude_config else None,

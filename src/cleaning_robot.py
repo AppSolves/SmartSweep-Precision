@@ -8,10 +8,12 @@ import time
 from machine import I2C, Pin  # type: ignore
 
 from src.actuators import Motor
+from src.config import Singleton
 from src.gpio import Button
 from src.sensors import Magnetometer, UltrasonicSensor
 
 
+@Singleton
 class CleaningRobot:
     def __init__(self):
         self.__motor_left__ = Motor(
@@ -154,30 +156,21 @@ class CleaningRobot:
             time.sleep_ms(10)  # type: ignore
 
     def stop_routine(self):
+        if not self.__is_cleaning__:
+            return
+
         self.__is_cleaning__ = False
         self.__stop__()
-
-    def start_routine(self):
-        self.__is_cleaning__ = True
-        self.__set_speed__(100)
-        self.__loop__ = asyncio.get_event_loop()
-        self.__loop__.create_task(self.__listen_for_button__())
-        self.__loop__.create_task(self.__routine__())
-        self.__loop__.run_forever()
         time.sleep(1)
 
-    async def __listen_for_button__(self):
-        await asyncio.sleep(1)
-        while self.__is_cleaning__:
-            if (
-                self.startstop_button.is_pressed
-            ):  # Replace with your button checking logic
-                self.stop_routine()
-            await asyncio.sleep(0.01)  # Sleep for a short time to prevent blocking
+    def start_routine(self):
+        if self.__is_cleaning__:
+            return
 
-        self.__loop__.stop()
-        del self.__loop__
-        await asyncio.sleep(1)
+        self.__is_cleaning__ = True
+        self.__set_speed__(100)
+        asyncio.create_task(self.__routine__())
+        time.sleep(1)
 
     async def __routine__(self):
         last_direction = None
