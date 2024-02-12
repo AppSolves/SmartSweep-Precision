@@ -37,27 +37,31 @@ async def setup_bluetooth():
 
     robot = CleaningRobot()
 
+    async def __write__(data: dict):
+        return await data_char.write(
+            json.dumps(data).encode("utf-8"),
+            send_update=True,
+        )
+
     async def __handle_commands__(data: str):
         try:
             command = json.loads(data)
-            if command["command"] == "start_cleaning":
+            if command["command"] == "request_cleaning_status":
+                is_cleaning_data = {"is_cleaning": robot.is_cleaning}
+                await __write__(is_cleaning_data)
+            elif command["command"] == "start_cleaning":
                 robot.start_routine()
                 if robot.is_cleaning:
                     is_cleaning_data = {"is_cleaning": robot.is_cleaning}
-                    await data_char.write(
-                        json.dumps(is_cleaning_data).encode("utf-8"),
-                        send_update=True,
-                    )
+                    await __write__(is_cleaning_data)
             elif command["command"] == "stop_cleaning":
                 robot.stop_routine()
                 if not robot.is_cleaning:
                     is_cleaning_data = {"is_cleaning": robot.is_cleaning}
-                    await data_char.write(
-                        json.dumps(is_cleaning_data).encode("utf-8"),
-                        send_update=True,
-                    )
+                    await __write__(is_cleaning_data)
         except Exception as e:
-            print(f"Error Handling Command: {e}")
+            if type(e) is not TypeError:
+                print(f"Error Handling Command: {e}")
 
     async def __wait_connections__():
         while True:
@@ -68,15 +72,9 @@ async def setup_bluetooth():
                     services=[_MICROCONTROLLER_SERVICE_UUID],
                     appearance=_APPEARANCE,
                 ) as connection:
-                    is_cleaning_data = {"is_cleaning": robot.is_cleaning}
-                    await data_char.write(
-                        json.dumps(is_cleaning_data).encode("utf-8"),
-                        send_update=True,
-                    )
-                    await connection.disconnected()
+                    await connection.disconnected(timeout_ms=None)
             except Exception as e:
-                if type(e) is not TypeError:
-                    print(f"Error Connection Waiter: {e}")
+                print(f"Error Connection Waiter: {e}")
 
     async def __listener__():
         while True:

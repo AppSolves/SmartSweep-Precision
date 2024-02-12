@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:smartsweep_precision/config/connection.dart';
 import 'package:smartsweep_precision/config/prints.dart';
 import 'package:smartsweep_precision/widgets/back_icon.dart';
@@ -25,7 +26,8 @@ class _ControlPageState extends State<ControlPage> {
   late final StreamSubscription<Map<String, dynamic>>?
       _onValueArrivedSubscription;
   bool disconnectedManually = false;
-  bool isCleaning = false;
+  bool _isCleaning = false;
+  bool _disableButton = false;
 
   @override
   void initState() {
@@ -58,15 +60,19 @@ class _ControlPageState extends State<ControlPage> {
       handleData,
       cancelOnError: true,
     );
+    ConnectionManager.write({"command": "request_cleaning_status"});
     super.initState();
   }
 
   void handleData(Map<String, dynamic> data) {
     printError(data);
-    if (data.keys.contains("is_cleaning")) {
-      setState(() {
-        isCleaning = data["is_cleaning"];
-      });
+    for (final String key in data.keys) {
+      if (key == "is_cleaning") {
+        setState(() {
+          _isCleaning = data["is_cleaning"];
+          _disableButton = false;
+        });
+      }
     }
   }
 
@@ -159,24 +165,97 @@ class _ControlPageState extends State<ControlPage> {
             ),
           ),
         ),
-        body: Center(
+        body: Padding(
+          padding: const EdgeInsets.only(top: 30, left: 25, right: 25),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                'Control Page',
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  ConnectionManager.writeCharacteristic(
-                    {"command": "start_cleaning"},
-                  );
-                },
-                icon: const Icon(Icons.bluetooth),
+              Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: AnimatedSwitcher(
+                        switchInCurve: Curves.easeInOut,
+                        switchOutCurve: Curves.easeInOut,
+                        duration: const Duration(milliseconds: 300),
+                        layoutBuilder: (currentChild, previousChildren) {
+                          return Stack(
+                            alignment: Alignment.centerLeft,
+                            children: <Widget>[
+                              ...previousChildren,
+                              if (currentChild != null) currentChild,
+                            ],
+                          );
+                        },
+                        child: _isCleaning
+                            ? const Text(
+                                "Status: Cleaning",
+                                key: ValueKey("cleaning"),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              )
+                            : const Text(
+                                "Status: Inactive",
+                                key: ValueKey("inactive"),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: AnimatedSize(
+                      alignment: Alignment.centerRight,
+                      duration: const Duration(milliseconds: 300),
+                      reverseDuration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      child: TextButton(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                            Theme.of(context).primaryColor,
+                          ),
+                          foregroundColor: MaterialStateProperty.all<Color>(
+                            Theme.of(context).scaffoldBackgroundColor,
+                          ),
+                          padding: MaterialStateProperty.all<EdgeInsets>(
+                            const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 10),
+                          ),
+                          shape: MaterialStateProperty.all<OutlinedBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (_disableButton) return;
+
+                          final String command =
+                              _isCleaning ? "stop_cleaning" : "start_cleaning";
+                          ConnectionManager.write({"command": command});
+                          setState(() {
+                            _disableButton = true;
+                          });
+                        },
+                        child: Text(
+                          _isCleaning ? "Stop" : "Start cleaning",
+                          style: GoogleFonts.poppins(
+                            fontSize: 17.5,
+                            color:
+                                Theme.of(context).textTheme.bodyMedium?.color,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

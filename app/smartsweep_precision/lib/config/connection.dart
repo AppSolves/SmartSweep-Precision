@@ -71,7 +71,7 @@ class ConnectionManager {
     return FlutterBluePlus.onScanResults;
   }
 
-  static void writeCharacteristic(Map<String, dynamic> jsonValue) async {
+  static void write(Map<String, dynamic> jsonValue) async {
     if (!(await permissionGranted) || !isConnected) return;
 
     if (Platform.isAndroid &&
