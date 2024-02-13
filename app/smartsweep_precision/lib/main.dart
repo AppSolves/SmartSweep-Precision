@@ -11,14 +11,10 @@ void main() async {
   final WidgetsBinding widgetsBinding =
       WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  await SystemChrome.setPreferredOrientations(
-    [
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ],
-  );
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   AppConfig().initialize();
   ConnectionManager.initialize();
+  ConnectionManager.disconnectAll();
   Themes.initialize();
   final ThemeMode themeMode = await Themes.themeMode;
   Themes.setSystemUIOverlayStyle(themeMode: themeMode);

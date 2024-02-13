@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:smartsweep_precision/config/prints.dart';
 import 'package:smartsweep_precision/config/themes.dart';
 
 class ConnectionManager {
@@ -89,7 +90,12 @@ class ConnectionManager {
           if (characteristic.uuid == _characteristicUUID) {
             final List<int> encoded =
                 utf8.encode(jsonEncode(jsonValue)).toList();
-            await characteristic.write(encoded);
+            try {
+              printError("Writing: '$encoded'");
+              await characteristic.write(encoded);
+            } catch (e) {
+              printError(e);
+            }
           }
         }
       }
@@ -235,4 +241,12 @@ class ConnectionManager {
       ),
     );
   }
+}
+
+enum ControlButton {
+  moveForward,
+  moveBackward,
+  turnLeft,
+  turnRight,
+  none,
 }

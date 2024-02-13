@@ -1,9 +1,15 @@
 import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:smartsweep_precision/config/app_config.dart';
 import 'package:smartsweep_precision/config/connection.dart';
+import 'package:smartsweep_precision/config/extensions.dart';
 import 'package:smartsweep_precision/config/prints.dart';
 import 'package:smartsweep_precision/widgets/back_icon.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -25,17 +31,28 @@ class _ControlPageState extends State<ControlPage> {
   late final StreamSubscription<bool> _bluetoothStateSubscription;
   late final StreamSubscription<Map<String, dynamic>>?
       _onValueArrivedSubscription;
-  bool disconnectedManually = false;
+  bool _disconnectedManually = false;
   bool _isCleaning = false;
-  bool _disableButton = false;
+  String _firmwareVersion = "Loading...";
+  bool _disableStartStopButton = false;
+  final ValueNotifier<ControlButton> _currentControlButton =
+      ValueNotifier<ControlButton>(ControlButton.none);
+  double _speed = 100;
 
   @override
   void initState() {
+    SystemChrome.setPreferredOrientations(
+      [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
+      ],
+    );
     toggleWakelock(true);
     _connectionStateSubscription =
         ConnectionManager.onConnectionStateChanged.listen(
       (bool? isConnected) {
-        if (isConnected == false && !disconnectedManually) {
+        if (isConnected == false && !_disconnectedManually) {
           showDisconnectionConfirmationDialog(
             context,
             widget.device.platformName,
@@ -60,19 +77,36 @@ class _ControlPageState extends State<ControlPage> {
       handleData,
       cancelOnError: true,
     );
-    ConnectionManager.write({"command": "request_cleaning_status"});
+    ConnectionManager.write({"command": "request_initial_info"});
     super.initState();
   }
 
   void handleData(Map<String, dynamic> data) {
     printError(data);
     for (final String key in data.keys) {
-      if (key == "is_cleaning") {
+      if (key == "firmware_version") {
+        _firmwareVersion = data["firmware_version"];
+      } else if (key == "is_cleaning") {
+        _isCleaning = data["is_cleaning"];
+      } else if (key == "stopped") {
         setState(() {
-          _isCleaning = data["is_cleaning"];
-          _disableButton = false;
+          _currentControlButton.value = ControlButton.none;
         });
+      } else if (key == "speed_set") {
+        if (data["speed_set"] != _speed) {
+          setState(() {
+            _speed = (data["speed_set"] as int).toDouble();
+          });
+        }
+      } else {
+        printError("Unknown key: $key");
       }
+    }
+
+    if (mounted) {
+      setState(() {
+        _disableStartStopButton = false;
+      });
     }
   }
 
@@ -82,6 +116,7 @@ class _ControlPageState extends State<ControlPage> {
     _connectionStateSubscription.cancel();
     _bluetoothStateSubscription.cancel();
     _onValueArrivedSubscription?.cancel();
+    _currentControlButton.dispose();
     super.dispose();
   }
 
@@ -114,8 +149,12 @@ class _ControlPageState extends State<ControlPage> {
                 child: const Text('Cancel'),
               ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 if (!suddenDisconnection) ConnectionManager.disconnectAll();
+                await SystemChrome.setPreferredOrientations(
+                  [DeviceOrientation.portraitUp],
+                );
+                if (!mounted) return;
                 Navigator.popUntil(context, ModalRoute.withName('/'));
               },
               child: Text(suddenDisconnection ? 'OK' : 'Disconnect'),
@@ -134,132 +173,458 @@ class _ControlPageState extends State<ControlPage> {
         if (didPop) return;
 
         setState(() {
-          disconnectedManually = true;
+          _disconnectedManually = true;
         });
         showDisconnectionConfirmationDialog(
           context,
           widget.device.platformName,
         );
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.device.platformName,
-          ),
-          centerTitle: true,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 15),
-            child: IconButton(
-              onPressed: () {
-                setState(() {
-                  disconnectedManually = true;
-                });
+      child: OrientationBuilder(
+        builder: (context, orientation) {
+          final bool isPortrait =
+              orientation == Orientation.portrait ? true : false;
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(
+                widget.device.platformName,
+              ),
+              centerTitle: true,
+              leading: Padding(
+                padding: const EdgeInsets.only(left: 15),
+                child: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _disconnectedManually = true;
+                    });
 
-                showDisconnectionConfirmationDialog(
-                  context,
-                  widget.device.platformName,
-                );
-              },
-              tooltip: 'Back',
-              icon: const BackIcon(),
+                    showDisconnectionConfirmationDialog(
+                      context,
+                      widget.device.platformName,
+                    );
+                  },
+                  iconSize: isPortrait
+                      ? SizeConfig.defaultSize * 3
+                      : SizeConfig.defaultSize * 2,
+                  tooltip: 'Back',
+                  icon: BackIcon(
+                    size: -1,
+                    offset: isPortrait
+                        ? const Offset(-2.5, 0)
+                        : const Offset(-7.5, 0),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.only(top: 30, left: 25, right: 25),
-          child: Column(
-            children: [
-              Stack(
+            body: orientation == Orientation.landscape
+                ? buildBodyLandscape(context)
+                : buildBodyPortrait(context),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget buildBodyLandscape(BuildContext context) {
+    return Center(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeInOut,
+        switchOutCurve: Curves.easeInOut,
+        child: _isCleaning
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: AnimatedSwitcher(
-                        switchInCurve: Curves.easeInOut,
-                        switchOutCurve: Curves.easeInOut,
-                        duration: const Duration(milliseconds: 300),
-                        layoutBuilder: (currentChild, previousChildren) {
-                          return Stack(
-                            alignment: Alignment.centerLeft,
-                            children: <Widget>[
-                              ...previousChildren,
-                              if (currentChild != null) currentChild,
-                            ],
-                          );
-                        },
-                        child: _isCleaning
-                            ? const Text(
-                                "Status: Cleaning",
-                                key: ValueKey("cleaning"),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.normal,
-                                ),
-                              )
-                            : const Text(
-                                "Status: Inactive",
-                                key: ValueKey("inactive"),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.normal,
-                                ),
-                              ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 25,
+                      right: 25,
+                      bottom: 25,
+                    ),
+                    child: Text(
+                      "Your SmartSweep robot is currently cleaning. In order to control it, please stop the cleaning process first.",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[600],
                       ),
                     ),
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: AnimatedSize(
-                      alignment: Alignment.centerRight,
-                      duration: const Duration(milliseconds: 300),
-                      reverseDuration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      child: TextButton(
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all<Color>(
-                            Theme.of(context).primaryColor,
-                          ),
-                          foregroundColor: MaterialStateProperty.all<Color>(
-                            Theme.of(context).scaffoldBackgroundColor,
-                          ),
-                          padding: MaterialStateProperty.all<EdgeInsets>(
-                            const EdgeInsets.symmetric(
-                                vertical: 5, horizontal: 10),
-                          ),
-                          shape: MaterialStateProperty.all<OutlinedBorder>(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(25),
-                            ),
-                          ),
+                  TextButton(
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                        Theme.of(context).primaryColor,
+                      ),
+                      foregroundColor: MaterialStateProperty.all<Color>(
+                        Theme.of(context).scaffoldBackgroundColor,
+                      ),
+                      padding: MaterialStateProperty.all<EdgeInsets>(
+                        const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                      ),
+                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
                         ),
-                        onPressed: () {
-                          if (_disableButton) return;
+                      ),
+                    ),
+                    onPressed: () {
+                      if (_disableStartStopButton) return;
 
-                          final String command =
-                              _isCleaning ? "stop_cleaning" : "start_cleaning";
-                          ConnectionManager.write({"command": command});
-                          setState(() {
-                            _disableButton = true;
-                          });
-                        },
-                        child: Text(
-                          _isCleaning ? "Stop" : "Start cleaning",
-                          style: GoogleFonts.poppins(
-                            fontSize: 17.5,
-                            color:
-                                Theme.of(context).textTheme.bodyMedium?.color,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                      ConnectionManager.write({"command": "stop_cleaning"});
+                      setState(() {
+                        _disableStartStopButton = true;
+                      });
+                    },
+                    child: Text(
+                      "Stop",
+                      style: GoogleFonts.poppins(
+                        fontSize: 17.5,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ],
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10, right: 25),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 50, bottom: 75),
+                          child: Text(
+                            "Speed",
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Transform.rotate(
+                          angle: -90 * math.pi / 180,
+                          child: Slider(
+                            value: _speed,
+                            label: "${_speed.round()}%",
+                            min: 0,
+                            max: 100,
+                            onChanged: (speed) {
+                              setState(() {
+                                _speed = speed;
+                              });
+                            },
+                            onChangeEnd: (speed) {
+                              ConnectionManager.write({
+                                "command": "set_speed",
+                                "speed": speed.round(),
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Transform.translate(
+                    offset: const Offset(-50, 0),
+                    child: ValueListenableBuilder<ControlButton>(
+                      valueListenable: _currentControlButton,
+                      builder: (context, currentControlButton, _) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTapDown: (_) {
+                                if (currentControlButton.isNotNone) return;
+
+                                ConnectionManager.write(
+                                    {"command": "move_forward"});
+                                setState(() {
+                                  _currentControlButton.value =
+                                      ControlButton.moveForward;
+                                });
+                              },
+                              onTapUp: (_) {
+                                if (!currentControlButton.isMoveForward) return;
+
+                                ConnectionManager.write({"command": "stop"});
+                              },
+                              onTapCancel: () {
+                                if (!currentControlButton.isMoveForward) return;
+
+                                ConnectionManager.write({"command": "stop"});
+                              },
+                              child: Icon(
+                                CupertinoIcons.arrow_up,
+                                size: SizeConfig.defaultSize * 4,
+                                color: currentControlButton.isMoveForward
+                                    ? Theme.of(context).primaryColor
+                                    : Theme.of(context).iconTheme.color,
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 50,
+                            ),
+                            GestureDetector(
+                              onTapDown: (_) {
+                                if (currentControlButton.isNotNone) return;
+
+                                ConnectionManager.write(
+                                    {"command": "move_backward"});
+                                setState(() {
+                                  _currentControlButton.value =
+                                      ControlButton.moveBackward;
+                                });
+                              },
+                              onTapUp: (_) {
+                                if (!currentControlButton.isMoveBackward) {
+                                  return;
+                                }
+
+                                ConnectionManager.write({"command": "stop"});
+                              },
+                              onTapCancel: () {
+                                if (!currentControlButton.isMoveBackward) {
+                                  return;
+                                }
+
+                                ConnectionManager.write({"command": "stop"});
+                              },
+                              child: Icon(
+                                CupertinoIcons.arrow_down,
+                                size: SizeConfig.defaultSize * 4,
+                                color: currentControlButton.isMoveBackward
+                                    ? Theme.of(context).primaryColor
+                                    : Theme.of(context).iconTheme.color,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const Spacer(),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 125),
+                    child: ValueListenableBuilder<ControlButton>(
+                      valueListenable: _currentControlButton,
+                      builder: (context, currentControlButton, _) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTapDown: (_) {
+                                if (currentControlButton.isNotNone) return;
+
+                                ConnectionManager.write(
+                                    {"command": "turn_left"});
+                                setState(() {
+                                  _currentControlButton.value =
+                                      ControlButton.turnLeft;
+                                });
+                              },
+                              onTapUp: (_) {
+                                if (!currentControlButton.isTurnLeft) return;
+
+                                ConnectionManager.write({"command": "stop"});
+                              },
+                              onTapCancel: () {
+                                if (!currentControlButton.isTurnLeft) return;
+
+                                ConnectionManager.write({"command": "stop"});
+                              },
+                              child: Icon(
+                                CupertinoIcons.arrow_left,
+                                size: SizeConfig.defaultSize * 4,
+                                color: currentControlButton.isTurnLeft
+                                    ? Theme.of(context).primaryColor
+                                    : Theme.of(context).iconTheme.color,
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 50,
+                            ),
+                            GestureDetector(
+                              onTapDown: (_) {
+                                if (currentControlButton.isNotNone) return;
+
+                                ConnectionManager.write(
+                                    {"command": "turn_right"});
+                                setState(() {
+                                  _currentControlButton.value =
+                                      ControlButton.turnRight;
+                                });
+                              },
+                              onTapUp: (_) {
+                                if (!currentControlButton.isTurnRight) return;
+
+                                ConnectionManager.write({"command": "stop"});
+                              },
+                              onTapCancel: () {
+                                if (!currentControlButton.isTurnRight) return;
+
+                                ConnectionManager.write({"command": "stop"});
+                              },
+                              child: Icon(
+                                CupertinoIcons.arrow_right,
+                                size: SizeConfig.defaultSize * 4,
+                                color: currentControlButton.isTurnRight
+                                    ? Theme.of(context).primaryColor
+                                    : Theme.of(context).iconTheme.color,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Padding buildBodyPortrait(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 30, left: 25, right: 25),
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: AnimatedSwitcher(
+                    switchInCurve: Curves.easeInOut,
+                    switchOutCurve: Curves.easeInOut,
+                    duration: const Duration(milliseconds: 300),
+                    layoutBuilder: (currentChild, previousChildren) {
+                      return Stack(
+                        alignment: Alignment.centerLeft,
+                        children: <Widget>[
+                          ...previousChildren,
+                          if (currentChild != null) currentChild,
+                        ],
+                      );
+                    },
+                    child: _isCleaning
+                        ? const Text(
+                            "Status: Cleaning",
+                            key: ValueKey("cleaning"),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          )
+                        : const Text(
+                            "Status: Inactive",
+                            key: ValueKey("inactive"),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: AnimatedSize(
+                  alignment: Alignment.centerRight,
+                  duration: const Duration(milliseconds: 300),
+                  reverseDuration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: TextButton(
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                        Theme.of(context).primaryColor,
+                      ),
+                      foregroundColor: MaterialStateProperty.all<Color>(
+                        Theme.of(context).scaffoldBackgroundColor,
+                      ),
+                      padding: MaterialStateProperty.all<EdgeInsets>(
+                        const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                      ),
+                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      if (_disableStartStopButton) return;
+
+                      final String command =
+                          _isCleaning ? "stop_cleaning" : "start_cleaning";
+                      ConnectionManager.write({"command": command});
+                      setState(() {
+                        _disableStartStopButton = true;
+                      });
+                    },
+                    child: Text(
+                      _isCleaning ? "Stop" : "Start cleaning",
+                      style: GoogleFonts.poppins(
+                        fontSize: 17.5,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.only(top: 15),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "Firmware version: $_firmwareVersion",
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: 25,
+                      right: 25,
+                      bottom: 25,
+                    ),
+                    child: Text(
+                      "Rotate your device to landscape mode to control the SmartSweep robot.",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    FontAwesomeIcons.rotate,
+                    size: 50,
+                    color: Colors.grey[600],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

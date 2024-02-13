@@ -168,7 +168,21 @@ class Themes {
         ),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: Colors.white,
+        color: primaryColor,
+      ),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: primaryColor,
+        trackHeight: 7.5,
+        showValueIndicator: ShowValueIndicator.always,
+        inactiveTrackColor: Colors.white.withOpacity(0.5),
+        thumbColor: primaryColor,
+        overlayColor: primaryColor.withOpacity(0.5),
+        valueIndicatorColor: primaryColor,
+        valueIndicatorTextStyle: GoogleFonts.poppins(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -311,7 +325,21 @@ class Themes {
         ),
       ),
       progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: Colors.black,
+        color: primaryColor,
+      ),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: primaryColor,
+        trackHeight: 7.5,
+        showValueIndicator: ShowValueIndicator.always,
+        inactiveTrackColor: Colors.black.withOpacity(0.5),
+        thumbColor: primaryColor,
+        overlayColor: primaryColor.withOpacity(0.5),
+        valueIndicatorColor: primaryColor,
+        valueIndicatorTextStyle: GoogleFonts.poppins(
+          color: Colors.black,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

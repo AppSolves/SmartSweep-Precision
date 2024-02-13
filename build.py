@@ -106,8 +106,6 @@ def sync(
         raise typer.Exit(code=1)
 
     try:
-        __change_version__()
-
         for root, dirs, files in os.walk(arduino_dir, topdown=False):
             dirs[:] = [d for d in dirs if d not in exclude_dirs]
 
@@ -139,7 +137,6 @@ def sync(
         if excl_config:
             typer.echo("Note: config files were not synced")
     except Exception as e:
-        __change_version__(increase=False)
         typer.echo(f"Error: {e}")
         raise typer.Exit(code=1)
 

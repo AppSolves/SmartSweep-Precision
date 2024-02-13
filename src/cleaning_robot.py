@@ -86,7 +86,7 @@ class CleaningRobot:
             "right": self.__motor_right__.speed,
         }
 
-    def __set_speed__(self, speed: dict | int):
+    def set_speed(self, speed: dict | int):
         if isinstance(speed, int):
             speed = {
                 "left": speed,
@@ -95,19 +95,19 @@ class CleaningRobot:
         self.__motor_left__.speed = speed["left"]
         self.__motor_right__.speed = speed["right"]
 
-    def __forward__(self):
+    def forward(self):
         self.__motor_left__.forward()
         self.__motor_right__.forward()
 
-    def __backwards__(self):
+    def backwards(self):
         self.__motor_left__.backwards()
         self.__motor_right__.backwards()
 
-    def __stop__(self):
+    def stop(self):
         self.__motor_left__.stop()
         self.__motor_right__.stop()
 
-    def __turn_left__(self):
+    def turn_left(self):
         self.__motor_left__.backwards()
         self.__motor_right__.forward()
 
@@ -115,7 +115,7 @@ class CleaningRobot:
         self.__motor_left__.stop()
         self.__motor_right__.forward()
 
-    def __turn_right__(self):
+    def turn_right(self):
         self.__motor_left__.forward()
         self.__motor_right__.backwards()
 
@@ -123,25 +123,27 @@ class CleaningRobot:
         self.__motor_left__.forward()
         self.__motor_right__.stop()
 
-    def __turn__(self, degrees: int, speed: int | None = None, smooth: bool = False):
+    async def __turn__(
+        self, degrees: int, speed: int | None = None, smooth: bool = False
+    ):
         # Get current magnetometer heading
         heading = self.__magnetometer__.read()["heading"]
         # Calculate target heading
         target_heading = self.magnetometer.correct_heading(heading + degrees)
         # Set speed
         if speed is not None:
-            self.__set_speed__(speed)
+            self.set_speed(speed)
         # Turn left or right depending on degrees
         if degrees < 0:
             if smooth:
                 self.__smooth_turn_left__()
             else:
-                self.__turn_left__()
+                self.turn_left()
         else:
             if smooth:
                 self.__smooth_turn_right__()
             else:
-                self.__turn_right__()
+                self.turn_right()
         # Loop until target heading is reached
         while True:
             # Get current magnetometer heading
@@ -150,17 +152,17 @@ class CleaningRobot:
             diff = target_heading - heading
             # If difference is less than 10 degrees, stop turning
             if abs(diff) < 10:
-                self.__stop__()
+                self.stop()
                 break
-            # Wait 1 millisecond
-            time.sleep_ms(10)  # type: ignore
+            # Wait 10 milliseconds
+            await asyncio.sleep(0.01)
 
     def stop_routine(self):
         if not self.__is_cleaning__:
             return
 
         self.__is_cleaning__ = False
-        self.__stop__()
+        self.stop()
         time.sleep(1)
 
     def start_routine(self):
@@ -168,7 +170,7 @@ class CleaningRobot:
             return
 
         self.__is_cleaning__ = True
-        self.__set_speed__(100)
+        self.set_speed(100)
         asyncio.create_task(self.__routine__())
         time.sleep(1)
 
@@ -181,15 +183,15 @@ class CleaningRobot:
 
             # Drive to the front until distance is less than 10cm
             if distance["front"] > 100:
-                self.__forward__()
+                self.forward()
             else:
-                self.__stop__()
+                self.stop()
                 # Check if he can turn right
                 if last_direction == "left":
-                    self.__turn__(180, smooth=(distance["right"] > 500))
+                    await self.__turn__(180, smooth=(distance["right"] > 500))
                     last_direction = "right"
                 else:
-                    self.__turn__(-180, smooth=(distance["left"] > 500))
+                    await self.__turn__(-180, smooth=(distance["left"] > 500))
                     last_direction = "left"
 
             await asyncio.sleep(0.1)

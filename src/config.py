@@ -21,7 +21,8 @@ def Singleton(cls):
 @Singleton
 class BoardConfigManager:
     def __init__(self):
-        self.__file__ = "../config/board_config.json"
+        self.__config_file__ = "../config/board_config.json"
+        self.__info_file__ = "../info.json"
         if not self.isdir("../config"):
             os.mkdir("../config")
 
@@ -64,10 +65,18 @@ class BoardConfigManager:
 
         write_json(data, f, 0)
 
+    @staticmethod
+    def get_immutables():
+        return ["firmware_version"]
+
     def reinit(self):
         try:
-            with open(self.__file__, "r", encoding="utf-8") as f:
+            with open(self.__config_file__, "r", encoding="utf-8") as f:
                 self.__config__ = json.load(f)
+
+            with open(self.__info_file__, "r", encoding="utf-8") as f:
+                info = json.load(f)
+                self.__config__.update(info)
         except:
             self.__config__ = {}
 
@@ -80,9 +89,12 @@ class BoardConfigManager:
         return self.__config__.get(key, default)
 
     def set(self, key, value):
+        if key in self.get_immutables():
+            return
+
         self.__config__[key] = value
         try:
-            with open(self.__file__, "w", encoding="utf-8") as f:
+            with open(self.__config_file__, "w", encoding="utf-8") as f:
                 self.__json_dump__(self.__config__, f)
         except:
             pass

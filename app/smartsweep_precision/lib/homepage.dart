@@ -273,7 +273,7 @@ class _HomePageState extends State<HomePage> {
                                   Icons.bluetooth_rounded,
                                   size: 50,
                                   color: Colors.grey[600],
-                                )
+                                ),
                               ],
                             ),
                           )

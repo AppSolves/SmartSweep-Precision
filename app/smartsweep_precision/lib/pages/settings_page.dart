@@ -61,7 +61,9 @@ class _SettingsPageState extends State<SettingsPage> {
           child: IconButton(
             onPressed: () => Navigator.pop(context),
             tooltip: 'Back',
-            icon: const BackIcon(),
+            icon: const BackIcon(
+              offset: Offset(-2.5, 0),
+            ),
           ),
         ),
       ),
