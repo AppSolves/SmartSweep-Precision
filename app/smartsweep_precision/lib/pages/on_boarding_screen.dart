@@ -16,7 +16,10 @@ import 'package:smartsweep_precision/widgets/page_dot_indicator.dart';
 class OnBoardingScreen extends StatefulWidget {
   const OnBoardingScreen({
     super.key,
+    this.firstTime = false,
   });
+
+  final bool firstTime;
 
   @override
   State<OnBoardingScreen> createState() => _OnBoardingScreenState();
@@ -40,30 +43,30 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
     _OnBoard(
       animation: "assets/anims/introduction.json",
       title: "Introduction",
-      scale: 1.175,
+      scale: 1.12,
       description:
           "Experience the future of automated cleaning with our Arduino Giga-powered robot and the cutting-edge technology of SmartSweep Precision.",
     ),
     _OnBoard(
       animation: "assets/anims/connection.json",
       title: "Establish connection",
-      scale: 1.175,
+      scale: 1.25,
       description:
           "Establish a seamless connection between your device and SmartSweep Precision. Follow the simple steps to ensure a smooth and efficient cleaning experience.",
     ),
     _OnBoard(
       animation: "assets/anims/features.json",
       title: "Features",
-      scale: 1.175,
+      scale: 1.12,
       description:
           "Explore precision navigation, remote control, status tracking and more - all within the grasp of our powerful feature set.",
     ),
     _OnBoard(
       animation: "assets/anims/ready.json",
       title: "Ready to clean?",
-      scale: 1.175,
+      scale: 1.23,
       description:
-          "Congratulations! Your SmartSweep Precision is now ready to embark on its cleaning mission. Sit back, relax, and let the intelligent cleaning prowess take over.",
+          "Congratulations! Your SmartSweep device is now ready to embark on its cleaning mission. Sit back, relax, and let the intelligent cleaning prowess take over.",
     ),
   ];
 
@@ -126,7 +129,15 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            buildSkipButton(),
+            Row(
+              mainAxisAlignment: !widget.firstTime
+                  ? MainAxisAlignment.spaceBetween
+                  : MainAxisAlignment.end,
+              children: [
+                if (!widget.firstTime) buildCloseIcon(),
+                buildSkipButton(),
+              ],
+            ),
             buildPageView(),
             buildButtonsWithDotIndicator(),
           ],
@@ -135,27 +146,49 @@ class _OnBoardingScreenState extends State<OnBoardingScreen>
     );
   }
 
-  Padding buildSkipButton() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 15),
-      child: Align(
-        alignment: Alignment.topRight,
-        child: GestureDetector(
-          onTap: () {
-            _pageController.animateToPage(
-              getLastPageIndex,
-              duration: animateToLastPage,
-              curve: Curves.easeInOut,
-            );
-          },
-          child: const Text(
-            "Skip",
-            style: TextStyle(
-              fontSize: 15,
-            ),
-          ),
-        ),
+  IconButton buildCloseIcon() {
+    return IconButton(
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+      iconSize: SizeConfig.defaultSize * 3,
+      tooltip: 'Close',
+      icon: const Icon(Icons.close_rounded),
+    );
+  }
+
+  AnimatedSwitcher buildSkipButton() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      switchInCurve: Curves.easeInOut,
+      switchOutCurve: Curves.easeInOut,
+      transitionBuilder: (child, animation) => ScaleTransition(
+        scale: animation,
+        child: child,
       ),
+      child: isLastPage
+          ? const SizedBox.square(dimension: 24)
+          : Padding(
+              padding: const EdgeInsets.only(right: 15),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: GestureDetector(
+                  onTap: () {
+                    _pageController.animateToPage(
+                      getLastPageIndex,
+                      duration: animateToLastPage,
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                  child: const Text(
+                    "Skip",
+                    style: TextStyle(
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 
@@ -312,16 +345,17 @@ class _OnBoardingButton extends StatelessWidget {
                   ? Text(
                       "Get Started",
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: 13 * (SizeConfig.defaultSize / 10.5),
-                          fontWeight: FontWeight.w800),
+                            fontSize: 13 * (SizeConfig.defaultSize / 10.5),
+                            fontWeight: FontWeight.w800,
+                          ),
                     )
                   : BackIcon(
                       isReverse: isForwardButton,
-                      offset: const Offset(-10, 0),
+                      offset: const Offset(-7.5, 0),
                     )
               : BackIcon(
                   isReverse: isForwardButton,
-                  offset: const Offset(-10, 0),
+                  offset: const Offset(-7.5, 0),
                 ),
         ),
       ),

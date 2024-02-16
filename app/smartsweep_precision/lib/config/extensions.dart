@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smartsweep_precision/config/connection.dart';
+import 'package:smartsweep_precision/config/themes.dart';
+import 'package:smartsweep_precision/main.dart';
 
 extension StringExtension on String {
   String correctEllipsis() {
@@ -28,6 +30,26 @@ extension ColorExtension on Color {
       (green - amount).clamp(0, 255),
       (blue - amount).clamp(0, 255),
     );
+  }
+
+  Color contrast(int amount) {
+    final ThemeMode themeMode = MainAppState.themeModeNotifier.value;
+
+    return themeMode == ThemeMode.dark
+        ? lighter(amount)
+        : themeMode == ThemeMode.light
+            ? darker(amount)
+            : Themes.platformBrightness == Brightness.dark
+                ? lighter(amount)
+                : darker(amount);
+  }
+
+  Color fromHex(String hex) {
+    hex = hex.toUpperCase().replaceAll('#', '');
+    if (hex.length == 6) {
+      hex = 'FF$hex';
+    }
+    return Color(int.parse(hex, radix: 16));
   }
 }
 

@@ -184,6 +184,17 @@ class Themes {
           fontWeight: FontWeight.w600,
         ),
       ),
+      switchTheme: SwitchThemeData(
+        thumbColor: MaterialStateProperty.all<Color>(Colors.white),
+        trackColor: MaterialStateProperty.resolveWith<Color>(
+          (Set<MaterialState> states) {
+            if (!states.contains(MaterialState.selected)) {
+              return Colors.white.withOpacity(0.5);
+            }
+            return primaryColor;
+          },
+        ),
+      ),
     );
   }
 
@@ -341,6 +352,17 @@ class Themes {
           fontWeight: FontWeight.w600,
         ),
       ),
+      switchTheme: SwitchThemeData(
+        thumbColor: MaterialStateProperty.all<Color>(Colors.black),
+        trackColor: MaterialStateProperty.resolveWith<Color>(
+          (Set<MaterialState> states) {
+            if (!states.contains(MaterialState.selected)) {
+              return Colors.black.withOpacity(0.5);
+            }
+            return primaryColor;
+          },
+        ),
+      ),
     );
   }
 
@@ -427,9 +449,13 @@ class Themes {
             icon: CircleAvatar(
               radius: iconButtonSize != null ? iconButtonSize / 2 : 20,
               backgroundColor: backgroundColor ??
-                  (platformBrightness == Brightness.dark
+                  (MainAppState.themeModeNotifier.value == ThemeMode.dark
                       ? Colors.white24
-                      : Colors.black26),
+                      : MainAppState.themeModeNotifier.value == ThemeMode.light
+                          ? Colors.black26
+                          : (platformBrightness == Brightness.dark
+                              ? Colors.white24
+                              : Colors.black26)),
               child: Transform.translate(
                 offset: iconOffset ?? const Offset(0, 0),
                 child: (icon is IconData
@@ -534,19 +560,14 @@ class Themes {
     setSystemUIOverlayStyle(themeMode: themeMode);
   }
 
-  static void setSystemUIOverlayStyle({ThemeMode? themeMode}) {
+  static void setSystemUIOverlayStyle({ThemeMode? themeMode}) async {
     final ThemeMode appThemeMode =
         themeMode ?? MainAppState.themeModeNotifier.value;
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        systemNavigationBarColor: appThemeMode == ThemeMode.dark
-            ? darkModeColor
-            : appThemeMode == ThemeMode.light
-                ? Colors.white
-                : platformBrightness == Brightness.dark
-                    ? darkModeColor
-                    : Colors.white,
+        systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness: appThemeMode == ThemeMode.dark
             ? Brightness.light
             : appThemeMode == ThemeMode.light

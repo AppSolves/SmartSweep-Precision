@@ -35,6 +35,8 @@ class JumpingDotsProgressIndicator extends StatefulWidget {
   final int milliseconds;
   final double beginTweenValue = 0.0;
   final double endTweenValue = 8.0;
+  final bool render;
+
   const JumpingDotsProgressIndicator({
     super.key,
     this.numberOfDots = 3,
@@ -42,6 +44,7 @@ class JumpingDotsProgressIndicator extends StatefulWidget {
     this.color,
     this.dotSpacing = 0.0,
     this.milliseconds = 250,
+    this.render = true,
   });
 
   @override
@@ -127,17 +130,31 @@ class JumpingDotsProgressIndicatorState
   Widget build(BuildContext context) {
     return SizedBox(
       height: fontSize! + fontSize! * 0.5,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: widgets,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeInOut,
+        switchOutCurve: Curves.easeInOut,
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        child: widget.render
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: widgets,
+              )
+            : const SizedBox(),
       ),
     );
   }
 
   @override
   void dispose() {
-    for (int i = 0; i < numberOfDots!; i++) {
-      controllers[i].dispose();
+    for (final AnimationController controller in controllers) {
+      controller.dispose();
     }
     super.dispose();
   }

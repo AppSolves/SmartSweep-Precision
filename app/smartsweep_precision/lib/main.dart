@@ -59,12 +59,10 @@ class MainAppState extends State<MainApp> {
 
   Widget buildHome() {
     if (widget.showHome) {
-      return const HomePage(
-        poppedOnBoardingScreen: false,
-      );
+      return const HomePage(poppedOnBoardingScreen: false);
     }
 
-    return const OnBoardingScreen();
+    return const OnBoardingScreen(firstTime: true);
   }
 
   @override

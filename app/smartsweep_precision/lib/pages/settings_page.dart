@@ -21,28 +21,25 @@ class _SettingsPageState extends State<SettingsPage> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: SizedBox(
-        height: 75,
-        child: Align(
-          alignment: Alignment.center,
-          child: ListTile(
-            onTap: onTap,
-            leading: leading,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(
-                Radius.circular(25),
-              ),
+      child: Align(
+        alignment: Alignment.center,
+        child: ListTile(
+          onTap: onTap,
+          leading: leading,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(25),
             ),
-            title: Text(
-              title,
-              textAlign: TextAlign.start,
-              style: GoogleFonts.poppins(
-                fontSize: 17.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            trailing: trailing,
           ),
+          title: Text(
+            title,
+            textAlign: TextAlign.start,
+            style: GoogleFonts.poppins(
+              fontSize: 17.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          trailing: trailing,
         ),
       ),
     );
@@ -69,7 +66,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.only(top: 15),
+          padding: const EdgeInsets.only(top: 25),
           child: Column(
             children: <Widget>[
               ValueListenableBuilder<ThemeMode>(

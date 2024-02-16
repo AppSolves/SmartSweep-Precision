@@ -6,7 +6,9 @@ import 'package:smartsweep_precision/config/custom_icons.dart';
 import 'package:smartsweep_precision/config/extensions.dart';
 import 'package:smartsweep_precision/config/themes.dart';
 import 'package:smartsweep_precision/pages/on_boarding_screen.dart';
+import 'package:smartsweep_precision/pages/privacy_policy.dart';
 import 'package:smartsweep_precision/pages/settings_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NavigationDrawerWidget extends StatefulWidget {
   const NavigationDrawerWidget({
@@ -64,24 +66,40 @@ class _NavigationDrawerState extends State<NavigationDrawerWidget> {
           ),
           const SizedBox(height: 10),
           buildMenuItem(
-            heading: "Onboarding",
-            icon: const Icon(FontAwesomeIcons.user),
-            text: 'Show onboarding screen',
+            heading: "Product Page",
+            icon: const Icon(FontAwesomeIcons.productHunt),
+            text: 'View product page',
             onClicked: () => selectedItem(context, 1),
           ),
           const SizedBox(height: 10),
+          buildMenuItem(
+            heading: "Onboarding",
+            icon: const Icon(FontAwesomeIcons.user),
+            text: 'Show onboarding screen',
+            onClicked: () => selectedItem(context, 2),
+          ),
+          const SizedBox(height: 10),
           const Divider(),
+          const SizedBox(height: 10),
+          buildMenuItem(
+            heading: "Privacy Policy",
+            text: "Privacy Policy and Terms & Conditions",
+            icon: const Icon(
+              Icons.privacy_tip_outlined,
+              size: 27.5,
+            ),
+            onClicked: () => selectedItem(context, 3),
+          ),
           const SizedBox(height: 10),
           buildMenuItem(
             heading: "About",
             text: AppConfig.appName,
             icon: const Icon(
               Icons.info_outline_rounded,
-              size: 25,
+              size: 27.5,
             ),
-            onClicked: () => selectedItem(context, 2),
+            onClicked: () => selectedItem(context, 4),
           ),
-          const SizedBox(height: 30),
         ],
       ),
     );
@@ -139,7 +157,7 @@ class _NavigationDrawerState extends State<NavigationDrawerWidget> {
   void selectedItem(
     BuildContext context,
     int index,
-  ) {
+  ) async {
     Navigator.of(context).pop();
 
     switch (index) {
@@ -151,13 +169,26 @@ class _NavigationDrawerState extends State<NavigationDrawerWidget> {
         );
         break;
       case 1:
+        if (await canLaunchUrl(AppConfig.productPageUrl)) {
+          await launchUrl(AppConfig.productPageUrl);
+        }
+
+        break;
+      case 2:
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (BuildContext context) => const OnBoardingScreen(),
           ),
         );
         break;
-      case 2:
+      case 3:
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) => const PrivacyPolicyPage(),
+          ),
+        );
+        break;
+      case 4:
         showCustomAboutDialog();
         break;
     }

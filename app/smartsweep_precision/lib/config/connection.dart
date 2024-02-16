@@ -53,19 +53,10 @@ class ConnectionManager {
         );
   }
 
-  static Stream<bool?> get onConnectionStateChanged {
-    bool lastState = isConnected;
-    return Stream.periodic(
-      const Duration(milliseconds: 100),
-      (_) {
-        final bool newState = isConnected;
-        if (lastState != newState) {
-          lastState = newState;
-          return newState;
-        }
-        return null;
-      },
-    );
+  static Stream<bool>? get onConnectionStateChanged {
+    return connectedDevice?.connectionState.map((state) {
+      return state == BluetoothConnectionState.connected;
+    });
   }
 
   static Stream<List<ScanResult>> get scanResults {

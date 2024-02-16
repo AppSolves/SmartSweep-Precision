@@ -24,6 +24,10 @@ class AppConfig {
     return "AppSolves";
   }
 
+  static Uri get productPageUrl {
+    return Uri.parse("https://www.appsolves.dev/my-apps/smartsweep-precision");
+  }
+
   static String get legalese {
     final year = 2024 - DateTimeConfig.year == 0
         ? DateTimeConfig.year
