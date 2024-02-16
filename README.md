@@ -28,7 +28,7 @@ Welcome to the SmartSweep Precision Project! This project aims to create a versa
 1. **MicroPython:** Install MicroPython on your Arduino board using [this guide](https://docs.arduino.cc/tutorials/giga-r1-wifi/giga-micropython).
 2. **Fork:** Clone the repository to your local machine using `git clone`
 3. **Install:** Install the required libraries using `pip install -r requirements.txt`
-4. **Sync:** Sync the program using `python sync.py` to your Arduino board
+4. **Sync:** Sync the program using `python build.py` to your Arduino board
 
 ## Usage 📝
 1. Place the cleaning robot in the desired cleaning area.
