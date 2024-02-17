@@ -8,7 +8,7 @@ import asyncio
 from src.cleaning_robot import CleaningRobot
 from src.connections import ConnectionManager
 
-# Create instances of the ConnectionManager and CleaningRobot classes
+# Create instances of the `ConnectionManager` and `CleaningRobot` classes
 connection_manager = ConnectionManager()
 robot = CleaningRobot()
 

@@ -2,10 +2,12 @@
 # This file is part of SmartSweep Precision.
 # It is subject to the terms and conditions of the CC BY-NC-ND 4.0 license.
 
+# Import the necessary libraries
 import json
 import os
 
 
+# Define the `Singleton` decorator
 def Singleton(cls):
     __instance__ = None
 
@@ -18,9 +20,12 @@ def Singleton(cls):
     return __get_instance__
 
 
+# Define the `BoardConfigManager` class
 @Singleton
 class BoardConfigManager:
+    # Define the `__init__` method
     def __init__(self):
+        # Define the `__config_file__` and `__info_file__` attributes and initialize the configuration
         self.__config_file__ = "../config/board_config.json"
         self.__info_file__ = "../info.json"
         if not self.isdir("../config"):
@@ -28,15 +33,20 @@ class BoardConfigManager:
 
         self.reinit()
 
+    # Define the `isdir` method
     @staticmethod
     def isdir(filename):
+        # Check if the `filename` is a directory at low-level
         try:
             return (os.stat(filename)[0] & 0x4000) != 0
         except OSError:
             return False
 
+    # Define the `__json_dump__` method
     @staticmethod
     def __json_dump__(data, f, indent=4):
+        # Dump the `data` to the file `f` with the given `indent`
+        # This method is used because in MicroPython, the `json.dump` method has no `indent` parameter
         def write_json(data, f, level):
             if isinstance(data, dict):
                 f.write("{\n")
@@ -65,11 +75,15 @@ class BoardConfigManager:
 
         write_json(data, f, 0)
 
+    # Define the `get_immutables` method
     @staticmethod
     def get_immutables():
+        # Return the immutable keys that cannot be changed
         return ["firmware_version"]
 
+    # Define the `reinit` method
     def reinit(self):
+        # Reinitialize the configuration and update it with the info
         try:
             with open(self.__config_file__, "r", encoding="utf-8") as f:
                 self.__config__ = json.load(f)
@@ -80,15 +94,21 @@ class BoardConfigManager:
         except:
             self.__config__ = {}
 
+    # Define the `has` method
     def has(self, key, check_none: bool = False):
+        # Check if the configuration has the given key
         if check_none:
             return key in self.__config__ and self.__config__[key] is not None
         return key in self.__config__
 
+    # Define the `get` method
     def get(self, key, default=None):
+        # Get the value of the given key from the configuration, with the given default value if not found
         return self.__config__.get(key, default)
 
+    # Define the `set` method
     def set(self, key, value):
+        # Set the value of the given key in the configuration (if it is not immutable) and save the configuration to the file
         if key in self.get_immutables():
             return
 
@@ -99,6 +119,21 @@ class BoardConfigManager:
         except:
             pass
 
+    # Define the `delete` method
+    def delete(self, key):
+        # Delete the given key from the configuration if it exists and save the configuration to the file
+        if key in self.get_immutables():
+            return
+
+        if self.has(key):
+            del self.__config__[key]
+            try:
+                with open(self.__config_file__, "w", encoding="utf-8") as f:
+                    self.__json_dump__(self.__config__, f)
+            except:
+                pass
+
+    # Define the `pin_map` property
     @property
     def pin_map(self):
         return {
@@ -190,6 +225,7 @@ class BoardConfigManager:
             "A13": "PA5",
         }
 
+    # Define the `timer_map` property
     @property
     def timer_map(self):
         return {

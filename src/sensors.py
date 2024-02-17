@@ -2,6 +2,7 @@
 # This file is part of SmartSweep Precision.
 # It is subject to the terms and conditions of the CC BY-NC-ND 4.0 license.
 
+# Import the necessary libraries
 import math
 import time
 
@@ -10,10 +11,14 @@ from machine import I2C, Pin, time_pulse_us  # type: ignore
 from src.config import BoardConfigManager
 
 
+# Define the `UltrasonicSensor` class
 class UltrasonicSensor:
+    # Define the `MAX_RANGE_IN_CM` constant
     MAX_RANGE_IN_CM = const(500)  # type: ignore
 
+    # Define the `__init__` method
     def __init__(self, trigger_pin: str, echo_pin: str):
+        # Set the `trigger_pin` and `echo_pin` attributes, and initialize the sensor
         self.__active__ = True
         self.__distance__ = 0
         self.__board_config_manager__ = BoardConfigManager()
@@ -29,7 +34,9 @@ class UltrasonicSensor:
         )
         self.__trigger_pin__.off()
 
+    # Define the `__send_pulse__` method
     def __send_pulse__(self):
+        # Send a pulse to the sensor and return the calculated pulse time
         self.__trigger_pin__.off()
         time.sleep_us(5)  # type: ignore
         self.__trigger_pin__.on()
@@ -47,18 +54,24 @@ class UltrasonicSensor:
         except:
             return -1
 
+    # Define the `get_distance_mm` method
     def get_distance_mm(self, pulse_count: int = 5):
+        # Get the distance in millimeters
         try:
+            # Get the distances and return the average
             distances_mm = [
                 (self.__send_pulse__() * 100 // 582) for _ in range(pulse_count)
             ]
+            # Remove the invalid distances (2499)
             distances_mm = [x for x in distances_mm if x != 2499]
             return int(sum(distances_mm) / len(distances_mm))
         except:
             return -1
 
 
+# Define the `Magnetometer` class
 class Magnetometer:
+    # Define the `__config_map__` attribute
     __config_map__ = {
         "mode": {
             "STANDBY": 0x00,
@@ -82,6 +95,7 @@ class Magnetometer:
         },
     }
 
+    # Define the `__init__` method
     def __init__(
         self,
         i2c: I2C,
@@ -89,10 +103,12 @@ class Magnetometer:
         indicator_pin: str | None = None,
         config: dict | None = None,
     ):
+        # Set the `i2c`, `address`, `indicator_pin`, and `config` attributes
         self.__i2c__ = i2c
         self.__address__ = address
         self.__board_config_manager__ = BoardConfigManager()
 
+        # For debugging purposes, set the `indicator_pin` attribute
         if indicator_pin is not None:
             self.__indicator_pin__ = Pin(
                 self.__board_config_manager__.pin_map[indicator_pin],
@@ -100,6 +116,7 @@ class Magnetometer:
             )
             self.indicator_pin.off()
 
+        # Set the `config` attribute and initialize the sensor with the given `config`
         if config is None:
             if self.__board_config_manager__.has("magnetometer", check_none=True):
                 self.config = self.__board_config_manager__.get("magnetometer")
@@ -122,17 +139,24 @@ class Magnetometer:
         else:
             self.config = config
 
+        # Initialize the sensor by setting the `mode` to `continuous`
         self.__write_Reg__(0x0B, 0x01)
 
+    # Define the `__del__` method
     def __del__(self):
+        # Set the `mode` to `standby` and delete the sensor
         self.config = {"mode": "standby"}
 
+    # Define the `config` property
     @property
     def config(self):
+        # Get the configuration of the sensor
         return self.__board_config_manager__.get("magnetometer")
 
+    # Define the `config` setter
     @config.setter
     def config(self, config: dict):
+        # Set the configuration of the sensor
         config = {
             "mode": config.get(
                 "mode",
@@ -181,6 +205,7 @@ class Magnetometer:
             ),
         }
         self.__board_config_manager__.set("magnetometer", config)
+        # Set the configuration of the sensor by writing to the registers
         self.__write_Reg__(
             0x09,
             self.__config_map__["mode"][config["mode"].upper()]
@@ -193,22 +218,28 @@ class Magnetometer:
             ],
         )
 
+    # Define the `magnetic_declination_degrees` property
     @property
     def magnetic_declination_degrees(self):
+        # Get the magnetic declination in degrees
         return (
             self.config["declination"]["degrees"]
             + self.config["declination"]["minutes"] / 60
         )
 
+    # Define the `reset` method
     def reset(self):
+        # Reset the sensor by writing to the registers
         self.__write_Reg__(0x0A, 0x80)
 
+    # Define the `__int_from_bytes__` method
     @staticmethod
     def __int_from_bytes__(
         bytes: bytes,
         byteorder: str,
         signed: bool = False,
     ):
+        # Define custom int.from_bytes method for signed integers, as it is not available in MicroPython
         if byteorder not in ("little", "big"):
             raise ValueError("byteorder must be either 'little' or 'big'")
         if signed:
@@ -230,6 +261,7 @@ class Magnetometer:
             # Use the standard int.from_bytes for unsigned integers
             return int.from_bytes(bytes, byteorder)
 
+    # Define the `calibrate` method
     def calibrate(self, n_samples: int = 1000, delay: int = 10, output: bool = False):
         # Initialize variables
         x_min = 0
@@ -284,7 +316,7 @@ class Magnetometer:
                 "z": {"offset": z_offset, "scale": z_scale},
             }
         }
-        # Print information for user that calibration is done if output is True
+        # Print information for user that calibration is done if `output` is True
         if output:
             print("Calibration done!")
             print(f"Offsets: {x_offset}, {y_offset}, {z_offset}")
@@ -292,18 +324,23 @@ class Magnetometer:
         if hasattr(self, "__indicator_pin__"):
             self.indicator_pin.off()
 
+    # Define the `indicator_pin` property
     @property
     def indicator_pin(self):
         return self.__indicator_pin__
 
+    # Define the `correct_heading` method
     def correct_heading(self, heading: float):
+        # Correct the heading by adding the magnetic declination and normalizing it
         if heading < 0:
             heading += 360
         elif heading > 360:
             heading -= 360
         return heading
 
+    # Define the `read` method
     def read(self) -> dict[str, float | int]:
+        # Read the magnetometer values and return the calibrated values
         data = self.__read_Reg__(0x00, 6)
 
         v_raw = [
@@ -312,6 +349,7 @@ class Magnetometer:
             self.__int_from_bytes__(data[4:6], "little", signed=True),
         ]
 
+        # Calibrate the values
         v = [
             (v_raw[0] - self.config["calibration"]["x"]["offset"])
             * self.config["calibration"]["x"]["scale"],
@@ -320,10 +358,12 @@ class Magnetometer:
             (v_raw[2] - self.config["calibration"]["z"]["offset"])
             * self.config["calibration"]["z"]["scale"],
         ]
+        # Calculate the heading
         heading = self.correct_heading(
             math.degrees(math.atan2(v[1], v[0])) + self.magnetic_declination_degrees
         )
 
+        # Return the calibrated values in a dictionary
         return {
             "x": v[0],
             "y": v[1],
@@ -331,8 +371,12 @@ class Magnetometer:
             "heading": heading,
         }
 
+    # Define the `__write_Reg__` method
     def __write_Reg__(self, reg: int, value: int):
+        # Write the `value` to the register `reg` over the I2C bus
         self.__i2c__.writeto_mem(self.__address__, reg, bytearray([value]))
 
+    # Define the `__read_Reg__` method
     def __read_Reg__(self, reg: int, length: int = 1):
+        # Read the `length` bytes from the register `reg` over the I2C bus
         return self.__i2c__.readfrom_mem(self.__address__, reg, length)

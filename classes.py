@@ -2,11 +2,11 @@
 # This file is part of SmartSweep Precision.
 # It is subject to the terms and conditions of the CC BY-NC-ND 4.0 license.
 
-# Importing the required library
+# Import the `Enum` class from the `enum` library
 from enum import Enum
 
 
-# Defining the Color class
+# Define the `Color` class
 class Color(Enum):
     HEADER = "\033[95m"
     WHITE = "\033[37m"

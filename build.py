@@ -2,7 +2,7 @@
 # This file is part of SmartSweep Precision.
 # It is subject to the terms and conditions of the CC BY-NC-ND 4.0 license.
 
-# Import the necessary modules
+# Import the necessary modules and classes
 import base64
 import json
 import os
@@ -16,7 +16,7 @@ from cryptography.fernet import Fernet, InvalidToken
 
 from classes import Color
 
-# Global variables to store some options & paths
+# Global variables to store some options and paths
 excl_config = False
 app = typer.Typer()
 self_file = os.path.basename(__file__)
@@ -63,12 +63,16 @@ exclude_dirs = [
 def __change_version__(increase: bool = True):
     with open(os.path.join(this_dir, "info.json")) as f:
         try:
+            # Load the `info.json` file
             info = json.load(f)
         except json.JSONDecodeError:
+            # If the file is empty or corrupted, create a new dictionary
             info = {}
         if info.get("firmware_version", None) is None:
+            # If the firmware version is not defined, set it to 1.0.0
             info["firmware_version"] = "1.0.0"
         else:
+            # Increase or decrease the version based on the increase parameter
             major, minor, patch = map(int, info["firmware_version"].split("."))
             if increase:
                 patch += 1
@@ -86,16 +90,20 @@ def __change_version__(increase: bool = True):
                     if minor == -1:
                         minor = 9
                         major -= 1
+            # Overwrite the firmware version with the new version in the info dictionary
             info["firmware_version"] = f"{major}.{minor}.{patch}"
     with open(os.path.join(this_dir, "info.json"), "w") as f:
+        # Write the new version to the `info.json` file
         json.dump(info, f, indent=4)
 
 # Helper function to get the firmware version
 def __get_version__():
     with open(os.path.join(this_dir, "info.json")) as f:
+        # Load the `info.json` file and return the firmware version
         try:
             info = json.load(f)
         except json.JSONDecodeError:
+            # If the file is empty or corrupted, create a new dictionary
             info = {}
         return info.get("firmware_version", "1.0.0")
 
@@ -149,6 +157,7 @@ def sync(
         if not from_zip_path:
             # Iterate through the current directory and copy the files to the Arduino drive
             for root, dirs, files in os.walk(this_dir):
+                # Exclude the files and directories defined in the `exclude_files` and `exclude_dirs` lists
                 dirs[:] = [d for d in dirs if d not in exclude_dirs]
                 files[:] = [f for f in files if f not in exclude_files]
 
@@ -168,7 +177,7 @@ def sync(
         else:
             # Extract the zip file to the Arduino drive
             if password:
-                # Decrypt the zip file if the password is provided
+                # Decrypt the zip file if the `password` is provided
                 with open(from_zip_path, "rb") as f:
                     data = f.read()
                 hash_clipped_pwd = sha256(password.encode()).digest()[:32]
@@ -182,7 +191,7 @@ def sync(
             with zipfile.ZipFile(from_zip_path, "r") as zipf:
                 zipf.extractall(arduino_dir)
 
-            # Encrypt the zip file again if the password is provided
+            # Encrypt the zip file again if the `password` is provided
             if password:
                 with open(from_zip_path, "wb") as f:
                     f.write(fernet.encrypt(data))
@@ -240,6 +249,7 @@ def build(
         ) as zipf:
             # Iterate through the current directory and add the files to the zip file
             for root, dirs, files in os.walk(this_dir):
+                # Exclude the files and directories defined in the `exclude_files` and `exclude_dirs` lists
                 dirs[:] = [d for d in dirs if d not in exclude_dirs]
                 files[:] = [f for f in files if f not in exclude_files]
 
@@ -248,7 +258,7 @@ def build(
                     relative_path = os.path.relpath(file_path, this_dir)
                     zipf.write(file_path, relative_path)
 
-        # Encrypt the firmware file if the encrypt option is provided
+        # Encrypt the firmware file if the `encrypt` option is provided
         if encrypt:
             with open(os.path.join(this_dir, "build", "firmware.zip"), "rb") as f:
                 data = f.read()
@@ -278,7 +288,7 @@ def build(
 @app.command(help="Clean the build directory")
 def clean():
     try:
-        # Delete the build directory and the __pycache__ directory
+        # Delete the build directory and the `__pycache__` directory
         shutil.rmtree(os.path.join(this_dir, "build"), ignore_errors=True)
         shutil.rmtree(os.path.join(this_dir, "__pycache__"), ignore_errors=True)
         typer.echo("\nClean complete!\n")
