@@ -2,31 +2,32 @@
 # This file is part of SmartSweep Precision.
 # It is subject to the terms and conditions of the CC BY-NC-ND 4.0 license.
 
+# Import modules
 import asyncio
 
-from src.cleaning_robot import (
-    CleaningRobot,
-)  # Importing the CleaningRobot class and time module
+from src.cleaning_robot import CleaningRobot
 from src.connections import ConnectionManager
 
-connection_manager = (
-    ConnectionManager()
-)  # Creating a new instance of the ConnectionManager class
-robot = CleaningRobot()  # Creating a new instance of the CleaningRobot class
+# Create instances of the ConnectionManager and CleaningRobot classes
+connection_manager = ConnectionManager()
+robot = CleaningRobot()
 
 
+# Define the main function
 async def main():
+    # Run the robot's main loop
     while True:
-        if (
-            robot.startstop_button.is_pressed and not robot.is_cleaning
-        ):  # If the start/stop button is pressed and the robot is not cleaning
-            robot.start_routine()  # Start the cleaning routine
+        # If the start/stop button is pressed and the robot is not cleaning, start the cleaning routine and send the new state to the client
+        if robot.startstop_button.is_pressed and not robot.is_cleaning:
+            robot.start_routine()
             await connection_manager.write({"is_cleaning": robot.is_cleaning})
+        # If the start/stop button is pressed and the robot is cleaning, stop the cleaning routine and send the new state to the client
         elif robot.startstop_button.is_pressed and robot.is_cleaning:
             robot.stop_routine()
             await connection_manager.write({"is_cleaning": robot.is_cleaning})
 
-        await asyncio.sleep(0.01)  # Sleep for 0.01 seconds
+        # Sleep for 10 ms to prevent the loop from running too fast
+        await asyncio.sleep(0.01)
 
 
 # Run the main function and the connection manager in parallel

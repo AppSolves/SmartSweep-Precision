@@ -2,6 +2,7 @@
 # This file is part of SmartSweep Precision.
 # It is subject to the terms and conditions of the CC BY-NC-ND 4.0 license.
 
+# Import the necessary modules
 import base64
 import json
 import os
@@ -15,12 +16,13 @@ from cryptography.fernet import Fernet, InvalidToken
 
 from classes import Color
 
+# Global variables to store some options & paths
 excl_config = False
 app = typer.Typer()
 self_file = os.path.basename(__file__)
 this_dir = os.path.dirname(os.path.realpath(__file__))
 
-
+# Callback to store the exclude-config option
 @app.callback()
 def main(
     exclude_config: Annotated[
@@ -36,6 +38,7 @@ def main(
     global excl_config
     excl_config = exclude_config
 
+# Exclude files and directories when syncing or building the firmware
 exclude_files = [
     self_file,
     "README.md",
@@ -56,7 +59,7 @@ exclude_dirs = [
     "config" if excl_config else None,
 ]
 
-
+# Helper function to change the firmware version
 def __change_version__(increase: bool = True):
     with open(os.path.join(this_dir, "info.json")) as f:
         try:
@@ -87,7 +90,7 @@ def __change_version__(increase: bool = True):
     with open(os.path.join(this_dir, "info.json"), "w") as f:
         json.dump(info, f, indent=4)
 
-
+# Helper function to get the firmware version
 def __get_version__():
     with open(os.path.join(this_dir, "info.json")) as f:
         try:
@@ -96,9 +99,10 @@ def __get_version__():
             info = {}
         return info.get("firmware_version", "1.0.0")
 
-
+# Main command to sync the firmware to an Arduino drive
 @app.command(help="Sync the firmware to an Arduino drive")
 def sync(
+    # Define CLI arguments and options
     disk: Annotated[
         str,
         typer.Argument(..., help=f"The drive letter to sync to (e.g. '{Color.colorize("P", Color.PURPLE)}')", show_default=False,),
@@ -126,11 +130,13 @@ def sync(
 ):
     arduino_dir = rf"{disk}:"
 
+    # Check if the drive exists
     if not os.path.exists(arduino_dir):
         typer.echo(f"\n{Color.colorize("ERROR", Color.RED)}: Drive '{Color.colorize(f"{disk}:\\", Color.PURPLE)}' does not exist\n")
         raise typer.Exit(code=1)
 
     try:
+        # Delete all files and directories in the Arduino drive
         for root, dirs, files in os.walk(arduino_dir, topdown=False):
             dirs[:] = [d for d in dirs if d not in exclude_dirs]
 
@@ -139,7 +145,9 @@ def sync(
             for name in dirs:
                 os.rmdir(os.path.join(root, name))
 
+        # Sync the firmware to the Arduino drive
         if not from_zip_path:
+            # Iterate through the current directory and copy the files to the Arduino drive
             for root, dirs, files in os.walk(this_dir):
                 dirs[:] = [d for d in dirs if d not in exclude_dirs]
                 files[:] = [f for f in files if f not in exclude_files]
@@ -158,7 +166,9 @@ def sync(
                     )
                     shutil.copy(file_path, os.path.join(arduino_dir, relative_path))
         else:
+            # Extract the zip file to the Arduino drive
             if password:
+                # Decrypt the zip file if the password is provided
                 with open(from_zip_path, "rb") as f:
                     data = f.read()
                 hash_clipped_pwd = sha256(password.encode()).digest()[:32]
@@ -168,17 +178,22 @@ def sync(
                 with open(from_zip_path, "wb") as f:
                     f.write(data)
 
+            # Extract the zip file to the Arduino drive
             with zipfile.ZipFile(from_zip_path, "r") as zipf:
                 zipf.extractall(arduino_dir)
 
+            # Encrypt the zip file again if the password is provided
             if password:
                 with open(from_zip_path, "wb") as f:
                     f.write(fernet.encrypt(data))
 
+        # Print out the success messages
         typer.echo("\nSync complete!\n")
 
         if excl_config:
             typer.echo(f"{Color.colorize("NOTE", Color.CYAN)}: Config files were not synced\n")
+
+    # When an error occurs, print the error and exit
     except zipfile.BadZipFile:
         typer.echo(f"\n{Color.colorize('ERROR', Color.RED)}: Invalid zip file! Maybe it's corrupted or encrypted...")
         typer.echo(f"{Color.colorize('INFO', Color.BLUE)}: If the file is encrypted, you can use the '{Color.colorize('--password', Color.CYAN)}' option to decrypt it\n")
@@ -190,11 +205,12 @@ def sync(
         typer.echo(f"\n{Color.colorize("ERROR", Color.RED)}: {e}\n")
         raise typer.Exit(code=1)
 
-
+# Main command to build the firmware into a zip file
 @app.command(
     help=f"Build the firmware into a zip file (Output directory: '{Color.colorize('build/firmware.zip', Color.PURPLE)}' | Current version: {Color.colorize(__get_version__(), Color.CYAN)})"
 )
 def build(
+    # Optional option to encrypt the firmware file
     encrypt: Annotated[
         Optional[str],
         typer.Option(
@@ -206,11 +222,13 @@ def build(
         ),
     ] = None,
 ):
+    # Check if the password is at least 8 characters long
     if encrypt and len(encrypt) < 8:
         typer.echo(f"\n{Color.colorize('ERROR', Color.RED)}: Password must be at least 8 characters long!\n")
         raise typer.Exit(code=1)
     
     try:
+        # Increase the version, delete the build directory and create a new one
         __change_version__()
         shutil.rmtree(os.path.join(this_dir, "build"), ignore_errors=True)
         os.makedirs(os.path.join(this_dir, "build"), exist_ok=True)
@@ -220,6 +238,7 @@ def build(
             compression=zipfile.ZIP_DEFLATED,
             compresslevel=9,
         ) as zipf:
+            # Iterate through the current directory and add the files to the zip file
             for root, dirs, files in os.walk(this_dir):
                 dirs[:] = [d for d in dirs if d not in exclude_dirs]
                 files[:] = [f for f in files if f not in exclude_files]
@@ -229,6 +248,7 @@ def build(
                     relative_path = os.path.relpath(file_path, this_dir)
                     zipf.write(file_path, relative_path)
 
+        # Encrypt the firmware file if the encrypt option is provided
         if encrypt:
             with open(os.path.join(this_dir, "build", "firmware.zip"), "rb") as f:
                 data = f.read()
@@ -239,6 +259,7 @@ def build(
             with open(os.path.join(this_dir, "build", "firmware.zip"), "wb") as f:
                 f.write(encrypted)
 
+        # Print out the success messages
         typer.echo("\nBuild complete!")
         typer.echo(
             f"Output: {Color.colorize(os.path.join(this_dir, 'build', 'firmware.zip'), Color.PURPLE)}\n"
@@ -248,26 +269,31 @@ def build(
             typer.echo(f"{Color.colorize('NOTE', Color.CYAN)}: Firmware file was encrypted")
             typer.echo(f"{Color.colorize('WARNING', Color.YELLOW)}: Do not forget the password!: {hidden_pwd} | If you lose it, the firmware file will be useless!\n")
     except Exception as e:
+        # When an error occurs, decrease the version again, print the error and exit
         __change_version__(increase=False)
         typer.echo(f"\n{Color.colorize("ERROR", Color.RED)}: {e}\n")
         raise typer.Exit(code=1)
 
-
+# Main command to clean the build directory
 @app.command(help="Clean the build directory")
 def clean():
     try:
+        # Delete the build directory and the __pycache__ directory
         shutil.rmtree(os.path.join(this_dir, "build"), ignore_errors=True)
         shutil.rmtree(os.path.join(this_dir, "__pycache__"), ignore_errors=True)
         typer.echo("\nClean complete!\n")
     except Exception as e:
+        # When an error occurs, print the error and exit
         typer.echo(f"\n{Color.colorize("ERROR", Color.RED)}: {e}\n")
         raise typer.Exit(code=1)
 
+# Main command to print out the firmware version
 @app.command(help="Print the current firmware version and exit")
 def version():
     typer.echo(
         f"\nFirmware version: {Color.colorize(__get_version__(), Color.CYAN)}\n"
     )
 
+# Run the CLI
 if __name__ == "__main__":
     app()

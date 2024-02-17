@@ -2,9 +2,11 @@
 # This file is part of SmartSweep Precision.
 # It is subject to the terms and conditions of the CC BY-NC-ND 4.0 license.
 
+# Importing the required library
 from enum import Enum
 
 
+# Defining the Color class
 class Color(Enum):
     HEADER = "\033[95m"
     WHITE = "\033[37m"
@@ -25,6 +27,7 @@ class Color(Enum):
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
 
+    # Defining the `colorize` method to colorize text
     @classmethod
     def colorize(cls, text: str, color: "Color"):
         return color.value + text + cls.ENDC.value
