@@ -48,7 +48,6 @@ class CleaningRobot:
         # Define the `Magnetometer` instance
         self.__magnetometer__ = Magnetometer(
             I2C(2, freq=400000),
-            indicator_pin="D23",
             config={
                 "declination": {
                     "degrees": 3,
