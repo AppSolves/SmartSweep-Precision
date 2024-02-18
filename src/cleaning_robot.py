@@ -24,24 +24,24 @@ class CleaningRobot:
             pin1="D6",
             pin2="D7",
             enable_pin="D3",
-            initial_speed=100,
+            initial_speed=50,
         )
         self.__motor_right__ = Motor(
             pin1="D5",
             pin2="D4",
             enable_pin="D2",
-            initial_speed=100,
+            initial_speed=50,
         )
         # Define the `UltrasonicSensor` instances
-        self.__ultrasonic_sensor_left__ = UltrasonicSensor(
+        self.__ultrasonic_sensor_right__ = UltrasonicSensor(
             trigger_pin="D10",
             echo_pin="D11",
         )
-        self.__ultrasonic_sensor_front__ = UltrasonicSensor(
+        self.__ultrasonic_sensor_left__ = UltrasonicSensor(
             trigger_pin="D8",
             echo_pin="D9",
         )
-        self.__ultrasonic_sensor_right__ = UltrasonicSensor(
+        self.__ultrasonic_sensor_front__ = UltrasonicSensor(
             trigger_pin="D12",
             echo_pin="D13",
         )
@@ -62,6 +62,7 @@ class CleaningRobot:
         )
         # Set the `is_cleaning` attribute to `False`
         self.__is_cleaning__ = False
+        self.stop()
 
     # Define the `startstop_button` property
     @property
@@ -200,7 +201,7 @@ class CleaningRobot:
 
         # Set the `is_cleaning` attribute to `True`, set the speed to 100 and start the routine
         self.__is_cleaning__ = True
-        self.set_speed(100)
+        self.set_speed(50)
         asyncio.create_task(self.__routine__())
         time.sleep(1)
 

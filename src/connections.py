@@ -60,10 +60,15 @@ class ConnectionManager:
     # Define the `write` method
     async def write(self, data: dict):
         # Write the `data` to the characteristic
-        return await self.__data_char__.write(
-            json.dumps(data).encode("utf-8"),
-            send_update=True,
-        )
+        try:
+            await self.__data_char__.write(
+                json.dumps(data).encode("utf-8"),
+                send_update=True,
+            )
+        except Exception as e:
+            # Print the error if the type is not `TypeError`
+            if type(e) is not TypeError:
+                print(f"Error Writing: {e}")
 
     # Define the `__handle_commands__` method
     async def __handle_commands__(self, data: str):
@@ -124,8 +129,7 @@ class ConnectionManager:
             else:
                 print(f"Unknown Command: {command}")
         except Exception as e:
-            if type(e) is not TypeError:
-                print(f"Error Handling Command: {e}")
+            print(f"Error Handling Command: {e}")
 
     # Define the `__wait_connections__` coroutine
     async def __wait_connections__(self):
