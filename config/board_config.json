@@ -4,17 +4,17 @@
         "range": "2G",
         "mode": "continuous",
         "calibration": {
-            "y": {
-                "offset": 2210.0,
-                "scale": 0.000406174
-            },
             "x": {
-                "offset": -1832.5,
-                "scale": 0.000414508
+                "offset": 1316.5,
+                "scale": 0.000338009
+            },
+            "y": {
+                "offset": 1613.5,
+                "scale": 0.000321182
             },
             "z": {
-                "offset": -1946.0,
-                "scale": 0.000513874
+                "offset": -2695.0,
+                "scale": 0.000371057
             }
         },
         "oversampling_ratio": "512",

@@ -51,14 +51,15 @@ class UltrasonicSensor:
             if pulse_time < 0:
                 pulse_time = int(self.MAX_RANGE_IN_CM * 29.1)
             return pulse_time
-        except:
+        except Exception as e:
+            print(f"US SENSOR ERROR: {e}")
             return -1
 
     # Define the `get_distance_mm` method
     def get_distance_mm(self, pulse_count: int = 5):
         # Get the distance in millimeters
         try:
-            # Get the distances and return the average
+            # Get 5 distances and return the average
             distances_mm = [
                 (self.__send_pulse__() * 100 // 582) for _ in range(pulse_count)
             ]
@@ -274,7 +275,7 @@ class Magnetometer:
         if output:
             print("Magnetometer calibration!")
             print(
-                "Please rotate the magnetometer 360° until done (starting in 3 seconds)."
+                "Please rotate the magnetometer 360 degrees until done (starting in 3 seconds)."
             )
             # Wait 3 seconds
             time.sleep_ms(3000)  # type: ignore
@@ -319,8 +320,8 @@ class Magnetometer:
         # Print information for user that calibration is done if `output` is True
         if output:
             print("Calibration done!")
-            print(f"Offsets: {x_offset}, {y_offset}, {z_offset}")
-            print(f"Scales: {x_scale}, {y_scale}, {z_scale}")
+            print(f"Offsets (X, Y, Z): {x_offset}, {y_offset}, {z_offset}")
+            print(f"Scales (X, Y, Z): {x_scale}, {y_scale}, {z_scale}")
         if hasattr(self, "__indicator_pin__"):
             self.indicator_pin.off()
 
@@ -329,8 +330,8 @@ class Magnetometer:
     def indicator_pin(self):
         return self.__indicator_pin__
 
-    # Define the `correct_heading` method
-    def correct_heading(self, heading: float):
+    # Define the `__correct_heading__` method
+    def __correct_heading__(self, heading: float):
         # Correct the heading by adding the magnetic declination and normalizing it
         if heading < 0:
             heading += 360
@@ -359,7 +360,7 @@ class Magnetometer:
             * self.config["calibration"]["z"]["scale"],
         ]
         # Calculate the heading
-        heading = self.correct_heading(
+        heading = self.__correct_heading__(
             math.degrees(math.atan2(v[1], v[0])) + self.magnetic_declination_degrees
         )
 
@@ -374,9 +375,16 @@ class Magnetometer:
     # Define the `__write_Reg__` method
     def __write_Reg__(self, reg: int, value: int):
         # Write the `value` to the register `reg` over the I2C bus
-        self.__i2c__.writeto_mem(self.__address__, reg, bytearray([value]))
+        try:
+            self.__i2c__.writeto_mem(self.__address__, reg, bytearray([value]))
+        except Exception as e:
+            print(f"MAGNETOMETER ERROR: {e}")
 
     # Define the `__read_Reg__` method
     def __read_Reg__(self, reg: int, length: int = 1):
         # Read the `length` bytes from the register `reg` over the I2C bus
-        return self.__i2c__.readfrom_mem(self.__address__, reg, length)
+        try:
+            return self.__i2c__.readfrom_mem(self.__address__, reg, length)
+        except Exception as e:
+            print(f"MAGNETOMETER ERROR: {e}")
+            return b"\x00"

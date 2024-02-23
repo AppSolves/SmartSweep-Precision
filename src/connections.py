@@ -41,7 +41,7 @@ class ConnectionManager:
             capture=True,
         )
 
-        # Register the BLE services and set the MTU buffer
+        # Register the BLE services and set the MTU buffer to 512 bytes
         aioble.register_services(microcontroller_service)
         aioble.core.ble.gatts_set_buffer(self.__data_char__._value_handle, 512)
 
@@ -72,28 +72,36 @@ class ConnectionManager:
 
     # Define the `__handle_commands__` method
     async def __handle_commands__(self, data: str):
-        # Define the `__send_cleaning_status__` coroutine
-        async def __send_cleaning_status__():
-            # Send the cleaning status and the firmware version to the client
-            is_cleaning_data = {
+        # Define the `__send_status__` coroutine
+        async def __send_status__():
+            # Send the current status info to the client
+            status_data = {
                 "is_cleaning": self.__robot__.is_cleaning,
                 "firmware_version": self.__board_config_manager__.get(
                     "firmware_version", "UNKNOWN"
                 ),
+                "brush_set": {
+                    "brush": "both",
+                    "value": [
+                        bool(self.__robot__.main_brush.value()),
+                        bool(self.__robot__.side_brush.value()),
+                    ],
+                },
+                "speed_set": self.__robot__.__get_speed__(as_dict=False),
             }
-            await self.write(is_cleaning_data)
+            await self.write(status_data)
 
         # Handle the commands
         try:
             command = json.loads(data)
             if command["command"] == "request_initial_info":
-                await __send_cleaning_status__()
+                await __send_status__()
             elif command["command"] == "start_cleaning":
                 self.__robot__.start_routine()
-                await __send_cleaning_status__()
+                await __send_status__()
             elif command["command"] == "stop_cleaning":
                 self.__robot__.stop_routine()
-                await __send_cleaning_status__()
+                await __send_status__()
             elif command["command"] == "move_forward":
                 if self.__robot__.is_cleaning:
                     return
@@ -126,6 +134,24 @@ class ConnectionManager:
                 self.__robot__.set_speed(command["speed"])
                 print(f"Set Speed: {command['speed']}")
                 await self.write({"speed_set": command["speed"]})
+            elif command["command"] == "set_brush":
+                if self.__robot__.is_cleaning:
+                    return
+                result = bool(
+                    self.__robot__.toggle_brush(
+                        command["brush"],
+                        command["value"],
+                    )
+                )
+                print(f"Set Brush: {command['brush']} to {result}")
+                await self.write(
+                    {
+                        "brush_set": {
+                            "brush": command["brush"],
+                            "value": result,
+                        }
+                    }
+                )
             else:
                 print(f"Unknown Command: {command}")
         except Exception as e:
@@ -143,6 +169,7 @@ class ConnectionManager:
                     appearance=self.__APPEARANCE__,
                 ) as connection:
                     await connection.disconnected(timeout_ms=None)
+                    print("Disconnected")
             except Exception as e:
                 print(f"Error Connection Waiter: {e}")
 

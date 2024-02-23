@@ -59,6 +59,5 @@ class Motor:
 
     # Define the `stop` method
     def stop(self):
-        self.speed = 0
         self.__pin1__.off()
         self.__pin2__.off()

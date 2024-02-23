@@ -299,7 +299,8 @@ class _HomePageState extends State<HomePage> {
                                                 },
                                               );
 
-                                              if (connected && mounted) {
+                                              if (connected &&
+                                                  context.mounted) {
                                                 await Navigator.of(context)
                                                     .push(
                                                   MaterialPageRoute(

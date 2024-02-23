@@ -38,9 +38,9 @@ class _ControlPageState extends State<ControlPage> {
   bool _disableStartStopButton = false;
   final ValueNotifier<ControlButton> _currentControlButton =
       ValueNotifier<ControlButton>(ControlButton.none);
-  double _speed = 100;
-  bool _mainBrushEnabled = true;
-  bool _sideBrushEnabled = true;
+  double _speed = 35;
+  bool _mainBrushEnabled = false;
+  bool _sideBrushEnabled = false;
 
   @override
   void initState() {
@@ -80,6 +80,7 @@ class _ControlPageState extends State<ControlPage> {
       handleData,
       cancelOnError: true,
     );
+    ConnectionManager.write({"command": "set_speed", "speed": 35});
     ConnectionManager.write({"command": "request_initial_info"});
     super.initState();
   }
@@ -101,12 +102,29 @@ class _ControlPageState extends State<ControlPage> {
         if (data["speed_set"] != _speed) {
           _speed = (data["speed_set"] as int).toDouble();
         }
-      } else if (key == "brush_status") {
-        if (data["brush_status"]["main"] != _mainBrushEnabled) {
-          _mainBrushEnabled = data["brush_status"]["main"];
-        }
-        if (data["brush_status"]["side"] != _sideBrushEnabled) {
-          _sideBrushEnabled = data["brush_status"]["side"];
+      } else if (key == "brush_set") {
+        final String brush = data["brush_set"]["brush"];
+        if (brush == "main") {
+          final bool value = data["brush_set"]["value"];
+          if (value != _mainBrushEnabled) {
+            _mainBrushEnabled = value;
+          }
+        } else if (brush == "side") {
+          final bool value = data["brush_set"]["value"];
+          if (value != _sideBrushEnabled) {
+            _sideBrushEnabled = value;
+          }
+        } else if (brush == "both") {
+          final List<bool> values =
+              (data["brush_set"]["value"] as List<dynamic>).map((value) {
+            return value as bool;
+          }).toList();
+          if (values[0] != _mainBrushEnabled) {
+            _mainBrushEnabled = values[0];
+          }
+          if (values[1] != _sideBrushEnabled) {
+            _sideBrushEnabled = values[1];
+          }
         }
       } else {
         printError("Unknown key: $key");
@@ -176,7 +194,7 @@ class _ControlPageState extends State<ControlPage> {
                         await SystemChrome.setPreferredOrientations(
                           [DeviceOrientation.portraitUp],
                         );
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         Navigator.popUntil(
                           context,
                           (route) => route.isFirst,
@@ -351,7 +369,7 @@ class _ControlPageState extends State<ControlPage> {
                                 value: _speed,
                                 label: "${_speed.round()}%",
                                 min: 0,
-                                max: 100,
+                                max: 60,
                                 onChanged: (speed) {
                                   setState(() {
                                     _speed = speed;
@@ -586,7 +604,7 @@ class _ControlPageState extends State<ControlPage> {
                                     ConnectionManager.write({
                                       "command": "set_brush",
                                       "brush": "main",
-                                      "enabled": enabled,
+                                      "value": enabled,
                                     });
 
                                     setState(() {
@@ -623,7 +641,7 @@ class _ControlPageState extends State<ControlPage> {
                                       ConnectionManager.write({
                                         "command": "set_brush",
                                         "brush": "side",
-                                        "enabled": enabled,
+                                        "value": enabled,
                                       });
 
                                       setState(() {

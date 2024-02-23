@@ -4,12 +4,11 @@
 
 # Import the necessary libraries
 import asyncio
-import time
 
 from machine import I2C, Pin  # type: ignore
 
 from src.actuators import Motor
-from src.config import Singleton
+from src.config import BoardConfigManager, Singleton
 from src.gpio import Button
 from src.sensors import Magnetometer, UltrasonicSensor
 
@@ -20,6 +19,7 @@ class CleaningRobot:
     # Define the `__init__` method
     def __init__(self):
         # Define the `Motor` instances
+        self.__board_config_manager__ = BoardConfigManager()
         self.__motor_left__ = Motor(
             pin1="D6",
             pin2="D7",
@@ -31,6 +31,14 @@ class CleaningRobot:
             pin2="D4",
             enable_pin="D2",
             initial_speed=50,
+        )
+        self.__motor_main_brush__ = Pin(
+            self.__board_config_manager__.pin_map["D24"],
+            Pin.OUT,
+        )
+        self.__motor_side_brush__ = Pin(
+            self.__board_config_manager__.pin_map["D25"],
+            Pin.OUT,
         )
         # Define the `UltrasonicSensor` instances
         self.__ultrasonic_sensor_right__ = UltrasonicSensor(
@@ -77,7 +85,11 @@ class CleaningRobot:
     # Define the `is_cleaning` property
     @property
     def is_cleaning(self):
-        return self.__is_cleaning__
+        # Check if the robot is cleaning and the routine task is not done
+        if not hasattr(self, "__routine_task__"):
+            return False
+
+        return self.__is_cleaning__ and not self.__routine_task__.done()
 
     # When deleting the object, stop the motors and set the magnetometer to inactive
     def __del__(self):
@@ -93,11 +105,32 @@ class CleaningRobot:
         }
 
     # Define the `get_speed` method
-    def get_speed(self):
-        return {
-            "left": self.__motor_left__.speed,
-            "right": self.__motor_right__.speed,
-        }
+    def __get_speed__(self, as_dict: bool = True):
+        if as_dict:
+            return {
+                "left": self.__motor_left__.speed,
+                "right": self.__motor_right__.speed,
+            }
+
+        return round(sum([self.__motor_left__.speed, self.__motor_right__.speed]) / 2)
+
+    def toggle_brush(self, brush: str, value: bool):
+        if brush == "main":
+            self.__motor_main_brush__.value(value)
+            return self.__motor_main_brush__.value()
+        elif brush == "side":
+            self.__motor_side_brush__.value(value)
+            return self.__motor_side_brush__.value()
+        else:
+            raise ValueError("Invalid brush type")
+
+    @property
+    def main_brush(self):
+        return self.__motor_main_brush__
+
+    @property
+    def side_brush(self):
+        return self.__motor_side_brush__
 
     # Define the `set_speed` method
     def set_speed(self, speed: dict | int):
@@ -154,7 +187,7 @@ class CleaningRobot:
         # Get current magnetometer heading
         heading = self.__magnetometer__.read()["heading"]
         # Calculate target heading
-        target_heading = self.magnetometer.correct_heading(heading + degrees)
+        target_heading = self.magnetometer.__correct_heading__(heading + degrees)
         # Set speed
         if speed is not None:
             self.set_speed(speed)
@@ -170,64 +203,69 @@ class CleaningRobot:
             else:
                 self.turn_right()
         # Loop until target heading is reached
-        while True:
+        while self.is_cleaning:
             # Get current magnetometer heading
             heading = self.__magnetometer__.read()["heading"]
             # Calculate difference between target heading and current heading
             diff = target_heading - heading
-            # If difference is less than 10 degrees, stop turning
-            if abs(diff) < 10:
-                self.stop()
+            # If difference is less than 3 degrees, break the loop
+            if abs(diff) < 3:
                 break
             # Wait 10 milliseconds
             await asyncio.sleep(0.01)
 
+        self.stop()
+
     # Define the `stop_routine` method
     def stop_routine(self):
         # Check if the robot is cleaning, if not, return
-        if not self.__is_cleaning__:
+        if not self.is_cleaning:
             return
 
-        # Set the `is_cleaning` attribute to `False` and stop the robot
+        # Set the `is_cleaning` attribute to `False` and cancel the routine task
         self.__is_cleaning__ = False
+        self.__routine_task__.cancel()
+        # Stop the robot and deactivate the brushes
         self.stop()
-        time.sleep(1)
+        self.toggle_brush("main", False)
+        self.toggle_brush("side", False)
 
     # Define the `start_routine` method
     def start_routine(self):
         # Check if the robot is cleaning, if so, return
-        if self.__is_cleaning__:
+        if self.is_cleaning:
             return
 
-        # Set the `is_cleaning` attribute to `True`, set the speed to 100 and start the routine
+        # Set the `is_cleaning` attribute to `True` and start the routine
         self.__is_cleaning__ = True
-        self.set_speed(50)
-        asyncio.create_task(self.__routine__())
-        time.sleep(1)
+        self.__routine_task__ = asyncio.create_task(self.__routine__())
 
     # Define the `__routine__` method
     async def __routine__(self):
-        # Loop until the robot is cleaning
+        # Activate the brushes and loop while the robot is cleaning
+        self.toggle_brush("main", True)
+        self.toggle_brush("side", True)
         last_direction = None
-        while self.__is_cleaning__:
-            # Get the distance and heading
+        while self.is_cleaning:
+            # Get the distance
             distance = self.get_distance()
-            heading = self.__magnetometer__.read()["heading"]
-            print(heading, distance)
 
-            # Drive to the front until distance is less than 10cm
-            if distance["front"] > 100:
+            # Set the speed to 35% and drive to the front until distance is less than 40cm
+            self.set_speed(35)
+            while distance["front"] > 400:
+                distance = self.get_distance()
                 self.forward()
-            else:
-                # Stop the robot
-                self.stop()
-                # Turn left or right depending on the last direction
-                if last_direction == "left":
-                    await self.__turn__(180, smooth=(distance["right"] > 500))
-                    last_direction = "right"
-                else:
-                    await self.__turn__(-180, smooth=(distance["left"] > 500))
-                    last_direction = "left"
+                await asyncio.sleep(0.01)
+
+            # Turn left or right depending on the last direction and update the last direction
+            if last_direction == "left" and distance["right"] >= 250:
+                smooth = distance["right"] > 450
+                await self.__turn__(180, smooth=smooth, speed=40 if smooth else 35)
+                last_direction = "right"
+            elif last_direction == "right" and distance["left"] >= 250:
+                smooth = distance["left"] > 450
+                await self.__turn__(-180, smooth=smooth, speed=40 if smooth else 35)
+                last_direction = "left"
 
             # Wait 10 milliseconds
             await asyncio.sleep(0.01)

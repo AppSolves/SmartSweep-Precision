@@ -18,7 +18,7 @@ Welcome to [SmartSweep Precision](https://github.com/AppSolves/SmartSweep-Precis
 
 * **Hardware Setup**: Ensure that your cleaning robot is built using Arduino Giga R1 WiFi and is compatible with the SmartSweep Precision app.
 
-* **Installation**: Set up your SmartSweep device according to the [docs](https://github.com/AppSolves/SmartSweep-Precision#installation) and install the SmartSweep Precision app on your mobile device.
+* **Installation**: Set up your SmartSweep device according to the [docs](https://github.com/AppSolves/SmartSweep-Precision#installation) and install the [SmartSweep Precision app](https://github.com/AppSolves/SmartSweep-Precision/releases) on your mobile device.
 
 * **Connection**: Establish a secure connection between your cleaning robot and the app by following the provided instructions.
 
