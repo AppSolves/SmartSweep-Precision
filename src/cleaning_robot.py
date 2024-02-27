@@ -245,7 +245,7 @@ class CleaningRobot:
         # Activate the brushes and loop while the robot is cleaning
         self.toggle_brush("main", True)
         self.toggle_brush("side", True)
-        last_direction = None
+        last_direction = "left"
         while self.is_cleaning:
             # Get the distance
             distance = self.get_distance()
