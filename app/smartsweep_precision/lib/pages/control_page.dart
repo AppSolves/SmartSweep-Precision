@@ -38,7 +38,7 @@ class _ControlPageState extends State<ControlPage> {
   bool _disableStartStopButton = false;
   final ValueNotifier<ControlButton> _currentControlButton =
       ValueNotifier<ControlButton>(ControlButton.none);
-  double _speed = 35;
+  double _speed = 40;
   bool _mainBrushEnabled = false;
   bool _sideBrushEnabled = false;
 
@@ -80,7 +80,7 @@ class _ControlPageState extends State<ControlPage> {
       handleData,
       cancelOnError: true,
     );
-    ConnectionManager.write({"command": "set_speed", "speed": 35});
+    ConnectionManager.write({"command": "set_speed", "speed": _speed.round()});
     ConnectionManager.write({"command": "request_initial_info"});
     super.initState();
   }
@@ -346,14 +346,13 @@ class _ControlPageState extends State<ControlPage> {
                       Padding(
                         padding: const EdgeInsets.only(
                           right: 25,
-                          top: 15,
+                          top: 65,
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Padding(
-                              padding:
-                                  const EdgeInsets.only(top: 50, bottom: 75),
+                              padding: const EdgeInsets.only(bottom: 75),
                               child: Text(
                                 "Speed",
                                 textAlign: TextAlign.center,

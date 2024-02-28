@@ -113,7 +113,10 @@ def sync(
     # Define CLI arguments and options
     disk: Annotated[
         str,
-        typer.Argument(..., help=f"The drive letter to sync to (e.g. '{Color.colorize("P", Color.PURPLE)}')", show_default=False,),
+        typer.Argument(...,
+            help=f"The drive letter to sync to (e.g. '{Color.colorize("P", Color.PURPLE)}')",
+            show_default=False,
+        ),
     ],
     from_zip_path: Annotated[
         Optional[str],
@@ -216,7 +219,7 @@ def sync(
 
 # Main command to build the firmware into a zip file
 @app.command(
-    help=f"Build the firmware into a zip file (Output directory: '{Color.colorize('build/firmware.zip', Color.PURPLE)}' | Current version: {Color.colorize(__get_version__(), Color.CYAN)})"
+    help=f"Build the firmware into a zip file (Output directory: '{Color.colorize(f'build/SSP_firmware_v{__get_version__()}.zip', Color.PURPLE)}')"
 )
 def build(
     # Optional option to encrypt the firmware file
@@ -230,6 +233,15 @@ def build(
             help=f"Encrypt the firmware file with a password ({Color.colorize("Min. 8 characters", Color.GREEN)}, e.g. '{Color.colorize("password123", Color.CYAN)}')",
         ),
     ] = None,
+    next_version: Annotated[
+        Optional[bool],
+        typer.Option(
+            ...,
+            "--next-version",
+            "-nv",
+            help="Increase the version before building the firmware",
+        ),
+    ] = False,
 ):
     # Check if the password is at least 8 characters long
     if encrypt and len(encrypt) < 8:
@@ -237,12 +249,14 @@ def build(
         raise typer.Exit(code=1)
     
     try:
-        # Increase the version, delete the build directory and create a new one
-        __change_version__()
+        # If `next_version` is true, increase the version.
+        if next_version:
+            __change_version__()
+        # Delete the build directory and create a new one
         shutil.rmtree(os.path.join(this_dir, "build"), ignore_errors=True)
         os.makedirs(os.path.join(this_dir, "build"), exist_ok=True)
         with zipfile.ZipFile(
-            os.path.join(this_dir, "build", "firmware.zip"),
+            os.path.join(this_dir, "build", f"SSP_firmware_v{__get_version__()}.zip"),
             "w",
             compression=zipfile.ZIP_DEFLATED,
             compresslevel=9,
@@ -260,27 +274,28 @@ def build(
 
         # Encrypt the firmware file if the `encrypt` option is provided
         if encrypt:
-            with open(os.path.join(this_dir, "build", "firmware.zip"), "rb") as f:
+            with open(os.path.join(this_dir, "build", f"SSP_firmware_v{__get_version__()}.zip"), "rb") as f:
                 data = f.read()
             hash_clipped_pwd = sha256(encrypt.encode()).digest()[:32]
             key = base64.urlsafe_b64encode(hash_clipped_pwd)
             fernet = Fernet(key)
             encrypted = fernet.encrypt(data)
-            with open(os.path.join(this_dir, "build", "firmware.zip"), "wb") as f:
+            with open(os.path.join(this_dir, "build", f"SSP_firmware_v{__get_version__()}.zip"), "wb") as f:
                 f.write(encrypted)
 
         # Print out the success messages
         typer.echo("\nBuild complete!")
         typer.echo(
-            f"Output: {Color.colorize(os.path.join(this_dir, 'build', 'firmware.zip'), Color.PURPLE)}\n"
+            f"Output: {Color.colorize(os.path.join(this_dir, 'build', f"SSP_firmware_v{__get_version__()}.zip"), Color.PURPLE)}\n"
         )
         if encrypt:
             hidden_pwd = Color.colorize("*" * len(encrypt[:-3]) + encrypt[-3:], Color.PURPLE)
             typer.echo(f"{Color.colorize('NOTE', Color.CYAN)}: Firmware file was encrypted")
             typer.echo(f"{Color.colorize('WARNING', Color.YELLOW)}: Do not forget the password!: {hidden_pwd} | If you lose it, the firmware file will be useless!\n")
     except Exception as e:
-        # When an error occurs, decrease the version again, print the error and exit
-        __change_version__(increase=False)
+        # When an error occurs, decrease the version again (if `next_version` was true), print the error and exit
+        if next_version:
+            __change_version__(increase=False)
         typer.echo(f"\n{Color.colorize("ERROR", Color.RED)}: {e}\n")
         raise typer.Exit(code=1)
 
@@ -301,7 +316,7 @@ def clean():
 @app.command(help="Print the current firmware version and exit")
 def version():
     typer.echo(
-        f"\nFirmware version: {Color.colorize(__get_version__(), Color.CYAN)}\n"
+        f"\nSmartSweep Precision: Firmware {Color.colorize(f'v{__get_version__()}', Color.CYAN)}\n"
     )
 
 # Run the CLI

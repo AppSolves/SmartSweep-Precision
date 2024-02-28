@@ -28,7 +28,7 @@ Welcome to the SmartSweep Precision Project! This project aims to create a versa
 1. **MicroPython:** Install MicroPython on your Arduino board using [this guide](https://docs.arduino.cc/tutorials/giga-r1-wifi/giga-micropython).
 2. **Fork:** Clone the repository to your local machine using `git clone`
 3. **Install:** Install the required libraries using `pip install -r requirements.txt`
-4. **Download release:** Download the latest release of the firmware and the app from the [releases page](https://github.com/AppSolves/SmartSweep-Precision/releases) or build the firmware from scratch using the `build.py` script.
+4. **Download release:** Download the latest release of the firmware and the app from the [releases page](https://github.com/AppSolves/SmartSweep-Precision/releases/latest) or build the firmware from scratch using the `build.py` script.
 4. **Sync:** Sync the firmware using `python build.py sync` to your Arduino board
 
 ## Usage 📝
