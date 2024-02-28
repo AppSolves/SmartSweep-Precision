@@ -6,6 +6,7 @@
 import asyncio
 
 from machine import I2C, Pin  # type: ignore
+from micropython import const  # type:ignore
 
 from src.actuators import Motor
 from src.config import BoardConfigManager, Singleton
@@ -16,6 +17,12 @@ from src.sensors import Magnetometer, UltrasonicSensor
 # Define the `CleaningRobot` class
 @Singleton
 class CleaningRobot:
+    DRIVE_SPEED = const(40)
+    TURN_SPEED = const(50)
+    FRONT_DISTANCE = const(400)
+    SIDE_DISTANCE = const(200)
+    TURN_DISTANCE = const(450)
+
     # Define the `__init__` method
     def __init__(self):
         # Define the `Motor` instances
@@ -24,13 +31,13 @@ class CleaningRobot:
             pin1="D6",
             pin2="D7",
             enable_pin="D3",
-            initial_speed=50,
+            initial_speed=self.DRIVE_SPEED,
         )
         self.__motor_right__ = Motor(
             pin1="D5",
             pin2="D4",
             enable_pin="D2",
-            initial_speed=50,
+            initial_speed=self.DRIVE_SPEED,
         )
         self.__motor_main_brush__ = Pin(
             self.__board_config_manager__.pin_map["D24"],
@@ -86,7 +93,7 @@ class CleaningRobot:
     @property
     def is_cleaning(self):
         # Check if the robot is cleaning and the routine task is not done
-        if not hasattr(self, "__routine_task__"):
+        if not hasattr(self, "__routine_task__") or self.__routine_task__ is None:
             return False
 
         return self.__is_cleaning__ and not self.__routine_task__.done()
@@ -250,21 +257,29 @@ class CleaningRobot:
             # Get the distance
             distance = self.get_distance()
 
-            # Set the speed to 35% and drive to the front until distance is less than 40cm
-            self.set_speed(35)
-            while distance["front"] > 400:
+            # Set the speed to self.DRIVE_SPEED (in %) and drive to the front until distance is less than 30cm
+            self.set_speed(self.DRIVE_SPEED)
+            while distance["front"] > self.FRONT_DISTANCE:
                 distance = self.get_distance()
                 self.forward()
                 await asyncio.sleep(0.01)
 
             # Turn left or right depending on the last direction and update the last direction
-            if last_direction == "left" and distance["right"] >= 250:
-                smooth = distance["right"] > 450
-                await self.__turn__(180, smooth=smooth, speed=40 if smooth else 35)
+            if last_direction == "left" and distance["right"] >= self.SIDE_DISTANCE:
+                smooth = distance["right"] > self.TURN_DISTANCE
+                await self.__turn__(
+                    180,
+                    smooth=smooth,
+                    speed=self.TURN_SPEED if smooth else self.DRIVE_SPEED,
+                )
                 last_direction = "right"
-            elif last_direction == "right" and distance["left"] >= 250:
-                smooth = distance["left"] > 450
-                await self.__turn__(-180, smooth=smooth, speed=40 if smooth else 35)
+            elif last_direction == "right" and distance["left"] >= self.SIDE_DISTANCE:
+                smooth = distance["left"] > self.TURN_DISTANCE
+                await self.__turn__(
+                    -180,
+                    smooth=smooth,
+                    speed=self.TURN_SPEED if smooth else self.DRIVE_SPEED,
+                )
                 last_direction = "left"
 
             # Wait 10 milliseconds

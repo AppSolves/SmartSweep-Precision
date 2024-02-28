@@ -5,16 +5,16 @@
         "mode": "continuous",
         "calibration": {
             "x": {
-                "offset": 2277.5,
-                "scale": 0.000328677
+                "offset": 1927.5,
+                "scale": 0.000333611
             },
             "y": {
-                "offset": -86.5,
-                "scale": 0.000308785
+                "offset": -571.0,
+                "scale": 0.00031736
             },
             "z": {
-                "offset": -3275.0,
-                "scale": 0.000305343
+                "offset": -3325.0,
+                "scale": 0.000300752
             }
         },
         "oversampling_ratio": "512",
