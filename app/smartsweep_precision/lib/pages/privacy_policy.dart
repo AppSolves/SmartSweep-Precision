@@ -40,62 +40,65 @@ class _PrivacyPolicyPageState extends State<PrivacyPolicyPage> {
                 color: Themes.primaryColor,
               ),
             ),
-            RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                style: const TextStyle(
-                  fontSize: 20,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: const TextStyle(
+                    fontSize: 20,
+                  ),
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: 'By using this app, you agree to the ',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(fontSize: 20),
+                    ),
+                    TextSpan(
+                      text: 'Privacy Policy',
+                      style: linkStyle,
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          showDialog(
+                            barrierDismissible: false,
+                            context: context,
+                            builder: (context) {
+                              return showText(
+                                context,
+                                "privacy_policy.md",
+                              );
+                            },
+                          );
+                        },
+                    ),
+                    TextSpan(
+                      text: ' and to the ',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(fontSize: 20),
+                    ),
+                    TextSpan(
+                      text: 'Terms & Conditions',
+                      style: linkStyle,
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          showDialog(
+                            barrierDismissible: false,
+                            context: context,
+                            builder: (context) {
+                              return showText(
+                                context,
+                                "tac.md",
+                              );
+                            },
+                          );
+                        },
+                    ),
+                  ],
                 ),
-                children: <TextSpan>[
-                  TextSpan(
-                    text: 'By using this app, you agree to the\n',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(fontSize: 20),
-                  ),
-                  TextSpan(
-                    text: 'Privacy Policy',
-                    style: linkStyle,
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        showDialog(
-                          barrierDismissible: false,
-                          context: context,
-                          builder: (context) {
-                            return showText(
-                              context,
-                              "privacy_policy.md",
-                            );
-                          },
-                        );
-                      },
-                  ),
-                  TextSpan(
-                    text: ' and to the\n',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(fontSize: 20),
-                  ),
-                  TextSpan(
-                    text: 'Terms & Conditions',
-                    style: linkStyle,
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        showDialog(
-                          barrierDismissible: false,
-                          context: context,
-                          builder: (context) {
-                            return showText(
-                              context,
-                              "tac.md",
-                            );
-                          },
-                        );
-                      },
-                  ),
-                ],
               ),
             ),
           ],

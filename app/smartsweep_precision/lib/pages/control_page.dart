@@ -38,7 +38,7 @@ class _ControlPageState extends State<ControlPage> {
   bool _disableStartStopButton = false;
   final ValueNotifier<ControlButton> _currentControlButton =
       ValueNotifier<ControlButton>(ControlButton.none);
-  double _speed = 40;
+  double _speed = 45;
   bool _mainBrushEnabled = false;
   bool _sideBrushEnabled = false;
 

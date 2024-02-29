@@ -219,7 +219,7 @@ def sync(
 
 # Main command to build the firmware into a zip file
 @app.command(
-    help=f"Build the firmware into a zip file (Output directory: '{Color.colorize(f'build/SSP_firmware_v{__get_version__()}.zip', Color.PURPLE)}')"
+    help=f"Build the firmware into a zip file (Output: '{Color.colorize(f'build/SSP_firmware_v{__get_version__()}.zip', Color.PURPLE)}')"
 )
 def build(
     # Optional option to encrypt the firmware file
