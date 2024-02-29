@@ -17,6 +17,7 @@ from src.sensors import Magnetometer, UltrasonicSensor
 # Define the `CleaningRobot` class
 @Singleton
 class CleaningRobot:
+    # Define the class constants
     DRIVE_SPEED = const(45)
     TURN_SPEED = const(60)
     FRONT_DISTANCE = const(400)
