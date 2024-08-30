@@ -185,10 +185,10 @@ class Themes {
         ),
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.all<Color>(Colors.white),
-        trackColor: MaterialStateProperty.resolveWith<Color>(
-          (Set<MaterialState> states) {
-            if (!states.contains(MaterialState.selected)) {
+        thumbColor: WidgetStateProperty.all<Color>(Colors.white),
+        trackColor: WidgetStateProperty.resolveWith<Color>(
+          (Set<WidgetState> states) {
+            if (!states.contains(WidgetState.selected)) {
               return Colors.white.withOpacity(0.5);
             }
             return primaryColor;
@@ -353,10 +353,10 @@ class Themes {
         ),
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.all<Color>(Colors.black),
-        trackColor: MaterialStateProperty.resolveWith<Color>(
-          (Set<MaterialState> states) {
-            if (!states.contains(MaterialState.selected)) {
+        thumbColor: WidgetStateProperty.all<Color>(Colors.black),
+        trackColor: WidgetStateProperty.resolveWith<Color>(
+          (Set<WidgetState> states) {
+            if (!states.contains(WidgetState.selected)) {
               return Colors.black.withOpacity(0.5);
             }
             return primaryColor;
@@ -478,7 +478,7 @@ class Themes {
     Widget? child,
     AlignmentGeometry? alignment,
     ButtonStyle? style,
-    MaterialStateProperty<OutlinedBorder?>? shape,
+    WidgetStateProperty<OutlinedBorder?>? shape,
     Offset? childOffset,
     Offset? offset,
     EdgeInsetsGeometry? padding,
@@ -493,11 +493,11 @@ class Themes {
       onLongPress: onLongPress,
       style: style ??
           ButtonStyle(
-            backgroundColor: MaterialStateProperty.all<Color>(
+            backgroundColor: WidgetStateProperty.all<Color>(
               primaryColor,
             ),
             shape: shape ??
-                MaterialStateProperty.all<RoundedRectangleBorder>(
+                WidgetStateProperty.all<RoundedRectangleBorder>(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),

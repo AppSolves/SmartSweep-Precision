@@ -55,7 +55,7 @@ class _ControlPageState extends State<ControlPage> {
     _connectionStateSubscription =
         ConnectionManager.onConnectionStateChanged?.listen(
       (bool isConnected) {
-        if (!isConnected && !_disconnectedManually) {
+        if (!isConnected && !_disconnectedManually && mounted) {
           showDisconnectionConfirmationDialog(
             context,
             widget.device.platformName,
@@ -67,7 +67,7 @@ class _ControlPageState extends State<ControlPage> {
     _bluetoothStateSubscription =
         ConnectionManager.onBluetoothStateChanged.listen(
       (bool isBluetoothEnabled) {
-        if (!isBluetoothEnabled) {
+        if (!isBluetoothEnabled && mounted) {
           showDisconnectionConfirmationDialog(
             context,
             widget.device.platformName,
@@ -219,7 +219,7 @@ class _ControlPageState extends State<ControlPage> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
 
         setState(() {
@@ -303,16 +303,16 @@ class _ControlPageState extends State<ControlPage> {
                   ),
                   TextButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(
+                      backgroundColor: WidgetStateProperty.all<Color>(
                         Theme.of(context).primaryColor,
                       ),
-                      foregroundColor: MaterialStateProperty.all<Color>(
+                      foregroundColor: WidgetStateProperty.all<Color>(
                         Theme.of(context).scaffoldBackgroundColor,
                       ),
-                      padding: MaterialStateProperty.all<EdgeInsets>(
+                      padding: WidgetStateProperty.all<EdgeInsets>(
                         const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                       ),
-                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                      shape: WidgetStateProperty.all<OutlinedBorder>(
                         RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),
                         ),
@@ -715,16 +715,16 @@ class _ControlPageState extends State<ControlPage> {
                   curve: Curves.easeInOut,
                   child: TextButton(
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(
+                      backgroundColor: WidgetStateProperty.all<Color>(
                         Theme.of(context).primaryColor,
                       ),
-                      foregroundColor: MaterialStateProperty.all<Color>(
+                      foregroundColor: WidgetStateProperty.all<Color>(
                         Theme.of(context).scaffoldBackgroundColor,
                       ),
-                      padding: MaterialStateProperty.all<EdgeInsets>(
+                      padding: WidgetStateProperty.all<EdgeInsets>(
                         const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                       ),
-                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                      shape: WidgetStateProperty.all<OutlinedBorder>(
                         RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(25),
                         ),

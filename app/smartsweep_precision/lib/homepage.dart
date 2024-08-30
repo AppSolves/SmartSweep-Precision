@@ -130,18 +130,18 @@ class _HomePageState extends State<HomePage> {
                           width: 125,
                           child: TextButton(
                             style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(
+                              backgroundColor: WidgetStateProperty.all<Color>(
                                 Theme.of(context).primaryColor,
                               ),
-                              foregroundColor: MaterialStateProperty.all<Color>(
+                              foregroundColor: WidgetStateProperty.all<Color>(
                                 Theme.of(context).scaffoldBackgroundColor,
                               ),
-                              padding: MaterialStateProperty.all<EdgeInsets>(
+                              padding: WidgetStateProperty.all<EdgeInsets>(
                                 const EdgeInsets.symmetric(
                                   vertical: 5,
                                 ),
                               ),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
+                              shape: WidgetStateProperty.all<OutlinedBorder>(
                                 RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(25),
                                 ),
